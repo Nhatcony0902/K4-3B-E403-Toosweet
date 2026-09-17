@@ -51,21 +51,29 @@ Loại: [x] Tối ưu tính năng có sẵn  [ ] Tính năng mới
 ## §5. Kiểu lỗi — 4 lớp chỗ khó + kịch bản (≥8) [bảng theo guide §2.5]
 
 ## §6. Bốn đường đi của trải nghiệm
-Luồng chung (thử trong `prototype/index.html`; bấm "Xem quyết định AI" để thấy điểm khớp và nhánh được chọn):
+Luồng chính ①/②/happy/correction bấm thử được trong `prototype/index.html` (mở "Xem quyết định AI" để thấy điểm khớp và nhánh được chọn). Hai cổng ③/④ dưới đây là thiết kế cho CP3, **chưa chạy trong mock CP2**:
 
 ```mermaid
 flowchart TD
-  A[Học viên mở bài · gõ câu hỏi trong khung tutor] --> B[Truy xuất đoạn liên quan trong bài đang mở]
+  A[Học viên mở bài · gõ câu hỏi trong khung tutor] --> S{③ Câu hỏi có thuộc phạm vi giải thích bài? - CP3}
+  S -->|Không: chấm bài hoặc làm hộ| O[③ Nói rõ giới hạn và gợi ý hỏi một khái niệm trong bài]
+  S -->|Có| B[Truy xuất đoạn liên quan trong bài đang mở]
   B --> C{AI quyết định: điểm khớp đoạn tốt nhất}
-  C -->|≥ ngưỡng tự tin và không có đoạn thứ 2 sát điểm| H[Happy: trả lời ngắn + nút Slide·đoạn]
+  C -->|≥ ngưỡng tự tin và không có đoạn thứ 2 sát điểm| P[Soạn câu trả lời từ đoạn nguồn]
+  P --> V{④ Chi tiết trả lời có được đoạn nguồn hỗ trợ? - CP3}
+  V -->|Có| H[Happy: trả lời ngắn + nút Slide·đoạn]
+  V -->|Không chắc hoặc mâu thuẫn| E[④ Không khẳng định chi tiết; cho xem nguồn hoặc hỏi TA]
   C -->|có khớp nhưng yếu hoặc ≥2 đoạn sát điểm| L[② Hỏi lại: chip chọn phần đúng]
   C -->|không đoạn nào khớp| F[① Báo bài không có nội dung này]
-  L -->|chọn 1 đoạn| H
+  L -->|chọn 1 đoạn| P
   L -->|Không phải các ý trên| F
   F --> T[Hỏi TA - điền sẵn bài + câu hỏi]
   F --> R[Hỏi lại theo cách khác] --> A
+  O --> R
+  E --> T
   H --> K[Bấm nguồn → tô sáng đoạn trong bài]
-  H -->|Nguồn không đúng| X[Correction: chọn đoạn khác] --> H2[Trả lời lại theo đoạn đã chọn + ghi log]
+  E --> K
+  H -->|Nguồn không đúng| X[Correction: chọn đoạn khác; thu mờ câu cũ; ghi trace trong phiên] --> P
   H -->|Sửa câu hỏi| A
   H & L & F -->|✕ Ẩn| D[Thu thẻ về 1 dòng]
 ```
@@ -74,7 +82,8 @@ flowchart TD
 - **Low-confidence (②)** — *"Similarity là gì?"*: 2 đoạn ở 2 slide khớp ngang nhau (cosine similarity ở Slide 3, ngưỡng similarity ở Slide 4) → AI **không trả lời**, khung vàng "Chưa chắc bạn hỏi phần nào" + chip chọn. Chọn chip → vào happy path với đoạn đó. "Không phải các ý trên" → chuyển sang ①. Kết thúc: có câu trả lời đúng phần hoặc chuyển TA.
 - **Failure / không căn cứ (①)** — *"LoRA fine-tuning cần bao nhiêu GPU?"*: không đoạn nào trong bài khớp → khung đỏ "Bài đang mở không có nội dung này… không trả lời để tránh đoán sai". Lựa chọn: "Hỏi TA" (form điền sẵn tên bài, slide, câu hỏi, lý do tutor không trả lời) hoặc "Hỏi lại theo cách khác". Kết thúc: câu hỏi đã sang TA, hoặc học viên hỏi lại.
 - **Correction (user sửa)** — *"Vì sao cần chia nhỏ tài liệu?"* → có câu trả lời kèm Slide 2 · đoạn 1 → học viên bấm "Nguồn không đúng" → chọn đoạn khác (vd. Slide 2 · đoạn 2 Overlap) → câu trả lời cũ bị thu mờ, mock minh hoạ câu trả lời viết sẵn theo đoạn mới và cho mở đoạn nguồn để đối chiếu. Trace chỉ ghi sự kiện trong phiên, chưa lưu ra file. Hoặc "Sửa câu hỏi" → câu cũ về ô nhập để sửa và hỏi lại.
-- Khi bị đòi ngoài phạm vi (③): · Case đặc thù domain (④):
+- **Ngoài phạm vi / thẩm quyền (③, dự kiến CP3)** — *"Làm hộ bài tập RAG này"*: kiểm tra mục đích câu hỏi trước khi truy xuất. Tutor nói không làm bài hộ, gợi ý hỏi một khái niệm cụ thể trong bài; không trả lời bài tập ngay cả khi slide có từ khóa trùng.
+- **Đặc thù domain (④, dự kiến CP3)** — Với chi tiết như khoảng cosine similarity `-1…1`, kích thước chunk `300–500 token` hoặc overlap `10–20%`, kiểm tra phát biểu dự định trả lời có được đúng đoạn nguồn hỗ trợ. Nếu thiếu hoặc mâu thuẫn, tutor không khẳng định con số, cho mở đoạn nguồn hoặc hỏi TA. Mock CP2 dùng câu viết sẵn nên chưa có bước kiểm tra này.
 
 ## §7. Kiểm thử
 - Chiều chất lượng + định nghĩa kiểm chứng được:
@@ -91,3 +100,4 @@ flowchart TD
 | Thời điểm | Đổi gì | Vì sao (trỏ về feedback/case nào) |
 |---|---|---|
 | 17/9 · CP2 | Điền §4 (mức Mock, conditional theo cost-of-error, §4b G10/G11/G9/G8) và §6 (4 đường đi + sơ đồ luồng); thêm `prototype/index.html` | Checkpoint CP2: kiểm tra luồng trước khi nối model thật |
+| 17/9 · sau CP2 | Thêm cổng kiểm tra phạm vi ③ trước truy xuất và cổng kiểm tra chi tiết domain ④ trước khi hiện câu trả lời; đánh dấu là thiết kế cho CP3 | Góp ý: hai lớp lỗi có trong mô tả nhưng vắng khỏi sơ đồ |
