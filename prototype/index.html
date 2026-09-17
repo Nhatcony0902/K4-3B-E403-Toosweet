@@ -63,7 +63,7 @@
 </style>
 </head>
 <body>
-<div class="banner">Prototype mức <b>Mock</b>: truy xuất đoạn và câu trả lời được giả lập bằng kịch bản (khớp từ khoá) — chưa gọi model thật.</div>
+<div class="banner"><b>CP2: bản bấm thử chưa có AI.</b> Truy xuất và câu trả lời đang giả lập. Mức đích CP3: Mock với AI thật ở lõi.</div>
 <header>
   <b>VLearn · AI20k · Bài 7: RAG cơ bản</b>
   <span style="color:var(--muted);font-size:13px">Học viên đang mở slide 1–4</span>
@@ -200,7 +200,7 @@ function answer(question, hit, opts = {}) {
     <div class="row"><button class="src" data-act="src">📄 ${label(p)}</button></div>
     <details><summary>Vì sao có câu trả lời này?</summary>
       <blockquote>“${p.text}”</blockquote>
-      ${opts.corrected ? "Bạn đã chọn đoạn này làm nguồn." : `Đoạn này khớp câu hỏi nhất trong bài (điểm khớp ${hit.score}, ngưỡng tự tin ${MIN_CONFIDENT}).`}
+      ${opts.corrected ? `Bạn đã chọn ${label(p)}; nội dung đoạn đó được trích ở trên để bạn đối chiếu.` : `Câu trả lời dựa trên nội dung ở ${label(p)}, được trích ở trên để bạn đối chiếu.`}
     </details>
     <div class="row">
       <button data-act="up">👍 Dễ hiểu</button>
@@ -291,7 +291,7 @@ function ask(question) {
   addUser(question);
   const hits = retrieve(question);
   const branch = decide(hits);
-  trace(`q="${question}" | top: ${hits.slice(0, 3).map(h => `${h.p.id}=${h.score}`).join(", ") || "none"} | → ${branch}`);
+  trace(`q="${question}" | top: ${hits.slice(0, 3).map(h => `${h.p.id}=${h.score}`).join(", ") || "none"} | min_grounded=${MIN_GROUNDED} | min_confident=${MIN_CONFIDENT} | ambiguity_ratio=${AMBIGUITY_RATIO} | → ${branch}`);
   if (branch === "happy") answer(question, hits[0]);
   else if (branch === "low_confidence") clarify(question, hits);
   else noGrounding(question);
