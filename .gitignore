@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+data/
+survey-raw/
+*.xlsx
+__pycache__/
+node_modules/
