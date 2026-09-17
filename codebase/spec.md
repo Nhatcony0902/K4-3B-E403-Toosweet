@@ -33,9 +33,11 @@ Loại: [x] Tối ưu tính năng có sẵn  [ ] Tính năng mới
 |---|---|---|
 | `GROUNDED` | Nguồn hỗ trợ các ý chính cần để trả lời yêu cầu cụ thể, không cần bổ sung kiến thức ngoài nguồn; không có cờ chất lượng chưa giải quyết ảnh hưởng đến câu trả lời | Các ý trả lời ngắn, mỗi ý gắn citation riêng |
 | `CLARIFY` | Câu hỏi thiếu thông tin hoặc có nhiều cách hiểu; một câu hỏi làm rõ có thể giải quyết sự mơ hồ; nhiệm vụ này chưa dùng lượt hỏi làm rõ | Một câu hỏi làm rõ, tùy chọn tối đa 3 gợi ý; chưa hiển thị câu trả lời nội dung |
-| `NO_SOURCE` | Không đủ nội dung hỗ trợ, nguồn không đáng tin ở phần cần trả lời, hoặc hết lượt làm rõ mà chưa giải quyết được | Thông báo theo đúng nguyên nhân; cho xem nguồn có vấn đề, hỏi TA hoặc kết thúc nhiệm vụ |
+| `NO_SOURCE` | Không đủ nội dung hỗ trợ, nguồn không đáng tin, hết lượt làm rõ, đầu ra không qua validator hoặc lỗi xử lý | Thông báo theo đúng `reason_code`; lỗi xử lý không được diễn đạt thành thiếu kiến thức trong bài |
 
 `NO_SOURCE` không có nghĩa chắc chắn toàn bộ bài không chứa câu trả lời: truy xuất top-k có thể bỏ sót. Câu hỏi đã rõ nhưng nguồn thiếu phải vào `NO_SOURCE`, không hỏi làm rõ chỉ để tránh báo thiếu nguồn. Cổng định tuyến ③ có các kết quả riêng `ACADEMIC`, `ADMIN`, `REFUSE`, `CLARIFY_SCOPE`; chỉ câu hỏi học thuật đi vào ba trạng thái căn cứ. Kết quả hành chính/từ chối không được biến thành `NO_SOURCE` với thông báo “bài không có nội dung này”.
+
+Nếu dùng model cho cổng định tuyến, model chỉ đề xuất mã tuyến; backend kiểm tra schema/enum rồi chọn thông báo có sẵn. `CLARIFY_SCOPE` dùng câu hỏi cố định về loại yêu cầu và vẫn qua bộ đếm làm rõ. Không hiển thị văn bản chưa kiểm tra từ model định tuyến. Lỗi dịch vụ, timeout hoặc ngoại lệ khi chạy kết thúc bằng `NO_SOURCE / PROCESSING_ERROR`; phản hồi đã nhận nhưng sai JSON/schema kết thúc bằng `NO_SOURCE / VALIDATION_FAILED`. Cả hai dùng thông báo phù hợp về lỗi xử lý/đầu ra, không tự suy ra tuyến hành chính, từ chối hay thiếu kiến thức.
 
 **Output contract nháp:**
 
@@ -48,8 +50,8 @@ Loại: [x] Tối ưu tính năng có sẵn  [ ] Tính năng mới
 
 **Validator là bước bắt buộc trước khi render mọi kết quả LLM, kể cả sau correction:**
 
-1. Kiểm tra JSON/schema, trạng thái và điều kiện trường tương ứng. Citation ID phải tồn tại, không trùng ID; mọi tham chiếu trong `claims` phải giải được. Nếu model tiếp tục trả `CLARIFY` khi `clarify_count = 1`, đổi thành `NO_SOURCE / CLARIFY_LIMIT` và không phát thêm câu hỏi làm rõ.
-2. Kiểm tra `lesson_id` và `segment_id` thuộc bài đang mở và tập nguồn đã thực sự cấp cho lượt gọi này. `quote` phải khớp đoạn gốc sau chuẩn hóa khoảng trắng; không chấp nhận citation do model tự tạo, thuộc bài khác hoặc ngoài tập nguồn được chọn.
+1. Kiểm tra JSON/schema, trạng thái và điều kiện trường tương ứng. Mỗi `citations[].id` là mã tham chiếu duy nhất trong phản hồi; mọi `claims[].citation_ids` phải trỏ tới một phần tử có thật trong danh sách đó. Đây chưa phải kiểm tra mã đoạn nguồn. Nếu model tiếp tục trả `CLARIFY` khi `clarify_count = 1`, đổi thành `NO_SOURCE / CLARIFY_LIMIT` và không phát thêm câu hỏi làm rõ.
+2. Kiểm tra `lesson_id` và `segment_id` là mã nguồn có thật, thuộc bài đang mở và tập nguồn đã thực sự cấp cho lượt gọi này. `quote` phải khớp đoạn gốc sau chuẩn hóa khoảng trắng; không chấp nhận mã đoạn bịa, thuộc bài khác hoặc ngoài tập nguồn được chọn.
 3. Với `GROUNDED`, chặn thiếu citation, ý chính không có citation, câu trả lời rỗng. Đối chiếu từng ý với đoạn được trích: đoạn có hỗ trợ phát biểu và trả lời đủ yêu cầu chính của câu hỏi không? Kiểm tra riêng con số, đơn vị, thuật ngữ, điều kiện áp dụng và cờ chất lượng nguồn (①/④). Không bỏ cờ mâu thuẫn/nguồn nghi sai chỉ vì học viên đã chọn một đoạn khi correction.
 4. Nếu bất kỳ kiểm tra bắt buộc nào không đạt hoặc không xác nhận được: hạ kết quả cuối xuống `NO_SOURCE`, xóa phần giải thích khỏi dữ liệu gửi tới UI; ghi lý do vào trace. Không hiện nháp lỗi trong lúc chờ validator. Lỗi model/validator phải được thông báo là lỗi xử lý, không tuyên bố bài không có kiến thức đó.
 
@@ -117,16 +119,23 @@ flowchart TD
   S -->|Ghi đè hướng dẫn hoặc ngoài thẩm quyền| O["Từ chối yêu cầu đó; giữ giới hạn nguồn"]
   S -->|Chưa rõ| W{"Đã dùng 1 lượt hỏi làm rõ?"}
   S -->|Học thuật trong phạm vi| B["Truy xuất top-k trong phạm vi nguồn được phép"]
+  S -->|Lỗi xử lý| ERR["NO_SOURCE / PROCESSING_ERROR: báo lỗi; không hiện nháp"]
+  S -->|Đầu ra sai JSON hoặc schema| N
   B --> R{"④ Nguồn cho ý cần trả lời có cờ chưa giải quyết?"}
+  B -->|Lỗi truy xuất| ERR
+  R -->|Lỗi kiểm tra nguồn| ERR
   R -->|Mâu thuẫn hoặc khuyết nội dung hoặc nghi sai| BAD["NO_SOURCE: nêu vấn đề nguồn; cho xem vị trí cần xác minh"]
   R -->|Không có cờ chặn| C["LLM đọc nguồn: GROUNDED / CLARIFY / NO_SOURCE; tạo đầu ra theo contract"]
   C --> V{"Validator ①/④: schema, citation và hỗ trợ từng ý"}
+  C -->|Timeout hoặc lỗi gọi model| ERR
+  V -->|Lỗi chạy kiểm tra| ERR
   V -->|Không đạt hoặc chưa xác nhận| N["Hạ NO_SOURCE; bỏ nháp trả lời; ghi lý do"]
   V -->|Đạt| D{"Trạng thái đã kiểm tra"}
   D -->|GROUNDED| H["Happy: từng ý chính kèm nút nguồn"]
   D -->|CLARIFY| W
   D -->|NO_SOURCE| F["Dừng giải thích; thông báo đúng nguyên nhân"]
   N --> F
+  ERR --> F
   BAD --> F
   W -->|Chưa| L["② Hỏi rõ một điều; tăng clarify_count lên 1"]
   W -->|Rồi| LIMIT["NO_SOURCE / CLARIFY_LIMIT: không hỏi thêm"]
@@ -202,3 +211,5 @@ Phạm vi nguồn được giữ qua các lượt làm rõ/correction cho đến
 | 17/9 · sau CP2 | Thêm cổng kiểm tra phạm vi ③ trước truy xuất và cổng kiểm tra chi tiết domain ④ trước khi hiện câu trả lời; đánh dấu là thiết kế cho CP3 | Góp ý: hai lớp lỗi có trong mô tả nhưng vắng khỏi sơ đồ |
 | 17/9 · review spec | Đổi quyết định từ điểm khớp sang đủ căn cứ; thêm ba trạng thái, output contract và validator; correction quay lại phân loại với nguồn giới hạn; thêm top-k/G15; sửa lý do automation và liệt kê case cần đo | Góp ý của nhóm: nguồn chỉ nhắc từ khóa vẫn có thể gây bịa, correction đi tắt, lập luận chi phí kiểm tra mâu thuẫn; case đối chiếu `T06-126` |
 | 17/9 · review bổ sung | Tách hành chính và yêu cầu ghi đè hướng dẫn; thêm cổng nguồn không đáng tin; giới hạn một lần làm rõ; xác định CP2 chưa có AI và mức đích Mock từ CP3; chuyển điểm/ngưỡng sang trace | Góp ý của nhóm về ③/④, vòng lặp CLARIFY, định nghĩa prototype trong guide và G11 |
+| 17/9 · kiểm tra lại | Bổ sung đường lỗi xử lý trong sơ đồ và kiểm tra đầu ra cổng định tuyến; đổi thông báo thiếu nguồn ở UI CP2 thành lời báo chưa xác định được đoạn phù hợp | Rà soát thấy UI khẳng định quá mức về nội dung bài; sơ đồ thiếu đường timeout/lỗi dịch vụ đã nêu trong phần chữ |
+| 18/9 · rà nội dung cuối | Làm rõ điều kiện `NO_SOURCE`, phân biệt lỗi dịch vụ với đầu ra sai schema và mã tham chiếu citation với mã đoạn nguồn | Tránh cách hiểu mâu thuẫn giữa bảng trạng thái, validator và sơ đồ khi triển khai CP3 |

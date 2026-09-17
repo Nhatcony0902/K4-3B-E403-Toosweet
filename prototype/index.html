@@ -90,7 +90,7 @@
       <button class="primary" type="submit">Hỏi</button>
     </form>
     <details class="trace" id="traceBox">
-      <summary>Xem quyết định AI (trace giả lập)</summary>
+      <summary>Trace kỹ thuật (giả lập)</summary>
       <div id="trace"></div>
     </details>
   </section>
@@ -190,7 +190,7 @@ function addBot(cls, html) {
 }
 function dismiss(el, note) { el.className = "dismissed"; el.textContent = note; }
 
-// ---- Đường ① Happy path ----
+// ---- Happy path ----
 function answer(question, hit, opts = {}) {
   const p = hit.p;
   const el = addBot("ok", `
@@ -218,7 +218,7 @@ function answer(question, hit, opts = {}) {
   };
 }
 
-// ---- Đường ④ Correction: user chọn lại nguồn ----
+// ---- Correction: user chọn lại nguồn ----
 function correctSource(question, wrong, answerEl) {
   trace(`correction: user báo nguồn sai ${wrong.id}`);
   const options = paras.filter(p => p.id !== wrong.id);
@@ -260,11 +260,11 @@ function clarify(question, hits) {
   };
 }
 
-// ---- Đường ③ No-grounding: báo giới hạn, chuyển TA ----
+// ---- No-grounding (lỗi lớp ①): báo giới hạn, chuyển TA ----
 function noGrounding(question) {
   const el = addBot("bad", `
-    <div class="label">Bài đang mở không có nội dung này</div>
-    <div>Mình không tìm thấy đoạn nào trong Bài 7 (slide 1–4) nói về câu hỏi của bạn, nên mình không trả lời để tránh đoán sai kiến thức.</div>
+    <div class="label">Chưa tìm đủ căn cứ</div>
+    <div>Mình chưa xác định được đoạn phù hợp cho câu hỏi này trong bài mẫu. Bạn có thể sửa câu hỏi hoặc mở tin nhắn mẫu gửi TA.</div>
     <div class="row">
       <button class="primary" data-act="ta">Hỏi TA (điền sẵn ngữ cảnh)</button>
       <button data-act="edit">Hỏi lại theo cách khác</button>
@@ -279,7 +279,7 @@ function noGrounding(question) {
 }
 
 function openTA(question) {
-  $("taBody").textContent = `Bài: AI20k · Bài 7 — RAG cơ bản (slide 1–4)\nCâu hỏi: ${question}\nTutor: không tìm thấy căn cứ trong bài đang mở.`;
+  $("taBody").textContent = `Bài: AI20k · Bài 7 — RAG cơ bản (slide 1–4)\nCâu hỏi: ${question}\nTutor: chưa xác định được đoạn phù hợp trong các đoạn tìm được.`;
   $("taDialog").showModal();
   trace("handoff: mở form gửi TA");
 }
