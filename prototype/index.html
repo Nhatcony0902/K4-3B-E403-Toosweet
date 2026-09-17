@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VLearn Tutor có căn cứ</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2230; --muted: #5d6677; --line: #dfe3ea;
+    --accent: #2f5bd3; --accent-soft: #e7eefc; --ok: #1d7a4f; --ok-soft: #e3f4ea;
+    --warn: #9a6200; --warn-soft: #fff3dc; --bad: #b3261e; --bad-soft: #fde8e6; --hl: #fff1a8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151b; --panel: #1b2029; --ink: #e6e9ef; --muted: #9aa3b2; --line: #2d3440;
+      --accent: #7ea2ff; --accent-soft: #22304f; --ok: #6fd3a0; --ok-soft: #1c3329;
+      --warn: #f1c26b; --warn-soft: #3a2f18; --bad: #ff8f86; --bad-soft: #3d2221; --hl: #5a4f14;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; }
+  .banner { background: var(--warn-soft); color: var(--warn); padding: 6px 16px; font-size: 13px; border-bottom: 1px solid var(--line); }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); gap: 8px; flex-wrap: wrap; }
+  header b { font-size: 16px; }
+  .layout { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; padding: 16px; max-width: 1280px; margin: 0 auto; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .lesson { padding: 16px; max-height: calc(100vh - 130px); overflow: auto; }
+  .slide { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+  .slide h3 { margin: 0 0 6px; font-size: 15px; }
+  .slide .tag { color: var(--muted); font-size: 12px; }
+  .para { padding: 4px 6px; border-radius: 6px; margin: 4px 0; transition: background .3s; }
+  .para .pid { color: var(--muted); font-size: 11px; margin-right: 4px; }
+  .para.hl { background: var(--hl); outline: 2px solid var(--warn); }
+  .tutor { display: flex; flex-direction: column; max-height: calc(100vh - 130px); }
+  .tutor-head { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .tutor-head small { color: var(--muted); display: block; }
+  .chat { flex: 1; overflow: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; min-height: 280px; }
+  .msg-user { align-self: flex-end; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; max-width: 85%; }
+  .bot { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; max-width: 95%; }
+  .bot.ok { border-left: 4px solid var(--ok); }
+  .bot.warn { border-left: 4px solid var(--warn); background: var(--warn-soft); }
+  .bot.bad { border-left: 4px solid var(--bad); background: var(--bad-soft); }
+  .label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .ok .label { color: var(--ok); } .warn .label { color: var(--warn); } .bad .label { color: var(--bad); }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  button { font: inherit; font-size: 13px; cursor: pointer; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 4px 10px; }
+  button:hover { border-color: var(--accent); }
+  button.src { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.ghost { border-color: transparent; color: var(--muted); }
+  details { margin-top: 6px; font-size: 13px; color: var(--muted); }
+  blockquote { margin: 6px 0; padding: 4px 10px; border-left: 3px solid var(--line); }
+  .presets { padding: 8px 16px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .presets span { font-size: 12px; color: var(--muted); }
+  form { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--line); }
+  input { flex: 1; font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-width: 0; }
+  .trace { border-top: 1px solid var(--line); padding: 8px 16px; font: 12px/1.45 ui-monospace, Consolas, monospace; color: var(--muted); max-height: 160px; overflow: auto; }
+  .trace summary { cursor: pointer; font-family: system-ui, sans-serif; }
+  .dismissed { opacity: .5; font-size: 12px; color: var(--muted); font-style: italic; }
+  dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); max-width: 440px; width: calc(100% - 32px); }
+  dialog pre { white-space: pre-wrap; background: var(--bg); padding: 8px; border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="banner">Prototype mức <b>Mock</b>: truy xuất đoạn và câu trả lời được giả lập bằng kịch bản (khớp từ khoá) — chưa gọi model thật.</div>
+<header>
+  <b>VLearn · AI20k · Bài 7: RAG cơ bản</b>
+  <span style="color:var(--muted);font-size:13px">Học viên đang mở slide 1–4</span>
+</header>
+
+<main class="layout">
+  <section class="card lesson" id="lesson" aria-label="Nội dung bài học"></section>
+
+  <section class="card tutor" aria-label="AI tutor">
+    <div class="tutor-head">
+      <b>Tutor của bài học</b>
+      <small>Chỉ trả lời dựa trên bài đang mở, luôn kèm slide/đoạn để bạn tự kiểm tra. Không tìm thấy trong bài thì sẽ báo, không đoán.</small>
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="presets">
+      <span>Thử nhanh:</span>
+      <button data-q="Embedding là gì?">Happy: Embedding là gì?</button>
+      <button data-q="Similarity là gì?">Low-confidence ②: Similarity là gì?</button>
+      <button data-q="LoRA fine-tuning cần bao nhiêu GPU?">No-grounding ①: LoRA cần bao nhiêu GPU?</button>
+      <button data-q="Vì sao cần chia nhỏ tài liệu?">Correction: hỏi rồi bấm "Nguồn không đúng"</button>
+    </div>
+    <form id="ask">
+      <input id="q" placeholder="Hỏi về bài đang mở…" autocomplete="off">
+      <button class="primary" type="submit">Hỏi</button>
+    </form>
+    <details class="trace" id="traceBox">
+      <summary>Xem quyết định AI (trace giả lập)</summary>
+      <div id="trace"></div>
+    </details>
+  </section>
+</main>
+
+<dialog id="taDialog">
+  <b>Gửi câu hỏi cho TA</b>
+  <p style="font-size:13px;color:var(--muted)">Tin nhắn đã điền sẵn ngữ cảnh để TA không phải hỏi lại. (Mock: không gửi thật.)</p>
+  <pre id="taBody"></pre>
+  <div class="row">
+    <button class="primary" id="taSend">Gửi</button>
+    <button id="taCancel">Huỷ</button>
+  </div>
+</dialog>
+
+<script>
+// ---- Dữ liệu bài học (giả lập). Mỗi đoạn có từ khoá để truy xuất và câu trả lời viết sẵn. ----
+const LESSON = [
+  { slide: 1, title: "RAG là gì?", paras: [
+    { text: "RAG (Retrieval-Augmented Generation) là cách cho mô hình ngôn ngữ đọc các đoạn tài liệu liên quan trước, rồi mới sinh câu trả lời dựa trên các đoạn đó.",
+      keys: ["rag", "rag la gi", "retrieval augmented generation"],
+      answer: "RAG là kỹ thuật cho mô hình tìm và đọc các đoạn tài liệu liên quan trước, sau đó mới viết câu trả lời dựa trên chính các đoạn đó." },
+    { text: "Lợi ích: giảm việc mô hình bịa thông tin (hallucination) và cập nhật kiến thức mới mà không cần huấn luyện lại mô hình.",
+      keys: ["loi ich", "hallucination", "giam bia", "vi sao can rag", "cap nhat kien thuc"],
+      answer: "RAG giúp mô hình ít bịa hơn vì câu trả lời bám vào tài liệu, và muốn cập nhật kiến thức chỉ cần thay tài liệu, không phải huấn luyện lại." } ] },
+  { slide: 2, title: "Chunking", paras: [
+    { text: "Tài liệu dài được chia thành các chunk khoảng 300–500 token, vì mô hình chỉ đọc được một lượng văn bản giới hạn và chunk nhỏ giúp truy xuất đúng phần cần.",
+      keys: ["chunk", "chunking", "chia nho", "chia tai lieu", "kich thuoc chunk"],
+      answer: "Tài liệu được chia nhỏ thành chunk (khoảng 300–500 token) vì mô hình chỉ đọc được lượng văn bản giới hạn, và chunk nhỏ giúp lấy đúng phần liên quan thay vì cả tài liệu." },
+    { text: "Các chunk liền nhau nên chồng lấn (overlap) 10–20% để câu nằm ở ranh giới không bị cắt mất ngữ cảnh.",
+      keys: ["overlap", "chunk overlap", "chong lan", "ranh gioi"],
+      answer: "Overlap là để 2 chunk liền nhau có chung 10–20% nội dung, nhờ vậy câu nằm ở chỗ cắt vẫn giữ được ngữ cảnh." } ] },
+  { slide: 3, title: "Embedding", paras: [
+    { text: "Embedding là một vector số biểu diễn ý nghĩa của đoạn văn; hai đoạn có nghĩa gần nhau thì vector cũng gần nhau.",
+      keys: ["embedding", "embedding la gi", "vector", "bieu dien y nghia"],
+      answer: "Embedding là dãy số (vector) thể hiện ý nghĩa của một đoạn văn. Hai đoạn có nghĩa gần nhau sẽ có vector nằm gần nhau." },
+    { text: "Độ gần giữa hai embedding thường đo bằng cosine similarity, giá trị từ -1 đến 1; càng gần 1 càng giống nhau.",
+      keys: ["cosine", "cosine similarity", "similarity", "do tuong dong", "so sanh vector"],
+      answer: "Cosine similarity đo hai embedding giống nhau đến đâu, cho giá trị từ -1 đến 1; càng gần 1 thì nghĩa càng giống." } ] },
+  { slide: 4, title: "Truy xuất top-k", paras: [
+    { text: "Khi có câu hỏi, hệ thống lấy top-k chunk có embedding gần câu hỏi nhất (thường k = 3–5) để đưa cho mô hình.",
+      keys: ["top k", "topk", "lay bao nhieu chunk", "truy xuat"],
+      answer: "Hệ thống lấy k chunk gần câu hỏi nhất (thường 3–5 chunk) rồi đưa cho mô hình đọc để trả lời." },
+    { text: "Nên đặt ngưỡng similarity: nếu chunk tốt nhất vẫn dưới ngưỡng thì coi như tài liệu không có căn cứ và không trả lời.",
+      keys: ["nguong", "threshold", "similarity", "duoi nguong", "khong du can cu"],
+      answer: "Ngưỡng similarity là mức tối thiểu: chunk tốt nhất vẫn thấp hơn mức đó thì coi như tài liệu không có căn cứ, và hệ thống không nên trả lời." } ] }
+];
+
+// Ngưỡng quyết định (giả lập retrieval score)
+const MIN_GROUNDED = 1;   // dưới mức này → ① không căn cứ
+const MIN_CONFIDENT = 2;  // dưới mức này → ② thiếu tự tin
+const AMBIGUITY_RATIO = 0.8; // đoạn thứ 2 đạt ≥80% điểm đoạn đầu → ② mơ hồ
+
+const $ = (id) => document.getElementById(id);
+const chat = $("chat");
+const paras = LESSON.flatMap(s => s.paras.map((p, i) => ({ ...p, slide: s.slide, title: s.title, idx: i + 1, id: `s${s.slide}p${i + 1}` })));
+const label = (p) => `Slide ${p.slide} · đoạn ${p.idx}`;
+
+function normalize(s) {
+  return " " + s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, " ").trim() + " ";
+}
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+
+function renderLesson() {
+  $("lesson").innerHTML = LESSON.map(s => `
+    <div class="slide"><span class="tag">Slide ${s.slide}</span><h3>${s.title}</h3>
+      ${s.paras.map((p, i) => `<p class="para" id="s${s.slide}p${i + 1}"><span class="pid">đ${i + 1}</span>${p.text}</p>`).join("")}
+    </div>`).join("");
+}
+
+function retrieve(question) {
+  const q = normalize(question);
+  return paras.map(p => ({ p, score: p.keys.reduce((sum, k) => q.includes(" " + k + " ") ? sum + k.split(" ").length : sum, 0) }))
+    .filter(r => r.score > 0).sort((a, b) => b.score - a.score);
+}
+
+function decide(hits) {
+  const best = hits[0]?.score ?? 0, second = hits[1]?.score ?? 0;
+  if (best < MIN_GROUNDED) return "no_grounding";
+  if (best < MIN_CONFIDENT || second >= best * AMBIGUITY_RATIO) return "low_confidence";
+  return "happy";
+}
+
+function trace(line) { $("trace").insertAdjacentHTML("afterbegin", `<div>${esc(line)}</div>`); }
+
+function highlight(id) {
+  document.querySelectorAll(".para.hl").forEach(e => e.classList.remove("hl"));
+  const el = $(id); el.classList.add("hl"); el.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function addUser(text) { chat.insertAdjacentHTML("beforeend", `<div class="msg-user">${esc(text)}</div>`); }
+function addBot(cls, html) {
+  const el = document.createElement("div");
+  el.className = "bot " + cls; el.innerHTML = html; chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight; return el;
+}
+function dismiss(el, note) { el.className = "dismissed"; el.textContent = note; }
+
+// ---- Đường ① Happy path ----
+function answer(question, hit, opts = {}) {
+  const p = hit.p;
+  const el = addBot("ok", `
+    <div class="label">${opts.corrected ? "Đã trả lời lại theo nguồn bạn chọn" : "Có căn cứ trong bài"}</div>
+    <div>${p.answer}</div>
+    <div class="row"><button class="src" data-act="src">📄 ${label(p)}</button></div>
+    <details><summary>Vì sao có câu trả lời này?</summary>
+      <blockquote>“${p.text}”</blockquote>
+      ${opts.corrected ? "Bạn đã chọn đoạn này làm nguồn." : `Đoạn này khớp câu hỏi nhất trong bài (điểm khớp ${hit.score}, ngưỡng tự tin ${MIN_CONFIDENT}).`}
+    </details>
+    <div class="row">
+      <button data-act="up">👍 Dễ hiểu</button>
+      <button data-act="wrong">Nguồn không đúng</button>
+      <button data-act="edit">Sửa câu hỏi</button>
+      <button class="ghost" data-act="hide">✕ Ẩn</button>
+    </div>`);
+  el.onclick = (e) => {
+    const act = e.target.dataset.act; if (!act) return;
+    if (act === "src") highlight(p.id);
+    if (act === "up") { e.target.textContent = "👍 Đã ghi nhận"; trace(`feedback: helpful ${p.id}`); }
+    if (act === "wrong") correctSource(question, p, el);
+    if (act === "edit") { $("q").value = question; $("q").focus(); trace("correction: user sửa câu hỏi"); }
+    if (act === "hide") dismiss(el, "Đã ẩn câu trả lời.");
+  };
+}
+
+// ---- Đường ④ Correction: user chọn lại nguồn ----
+function correctSource(question, wrong, answerEl) {
+  trace(`correction: user báo nguồn sai ${wrong.id}`);
+  const options = paras.filter(p => p.id !== wrong.id);
+  const el = addBot("warn", `
+    <div class="label">Sửa nguồn</div>
+    <div>Cảm ơn bạn. Phần nào trong bài đúng với điều bạn hỏi? Chọn một đoạn, mình sẽ trả lời lại chỉ dựa trên đoạn đó.</div>
+    <div class="row">${options.map(p => `<button data-id="${p.id}">${label(p)} — ${p.title}</button>`).join("")}</div>
+    <div class="row"><button data-act="edit">Sửa câu hỏi thay vì chọn nguồn</button><button class="ghost" data-act="hide">✕ Bỏ qua</button></div>`);
+  el.onclick = (e) => {
+    const { id, act } = e.target.dataset;
+    if (act === "hide") return dismiss(el, "Đã bỏ qua sửa nguồn.");
+    if (act === "edit") { $("q").value = question; $("q").focus(); return; }
+    if (!id) return;
+    const p = paras.find(x => x.id === id);
+    dismiss(answerEl, `Câu trả lời cũ (${label(wrong)}) đã được thay.`);
+    dismiss(el, `Bạn đã chọn ${label(p)}.`);
+    trace(`correction log: "${question}" | ${wrong.id} → ${p.id} (đưa vào golden set để xem lại)`);
+    answer(question, { p, score: "—" }, { corrected: true });
+  };
+}
+
+// ---- Đường ② Low-confidence: hỏi lại, không đoán ----
+function clarify(question, hits) {
+  const cands = hits.slice(0, 3);
+  const el = addBot("warn", `
+    <div class="label">Chưa chắc bạn hỏi phần nào</div>
+    <div>Câu hỏi có thể liên quan đến ${cands.length > 1 ? "nhiều phần" : "một phần"} trong bài. Để tránh giải thích nhầm, bạn chọn ý đúng nhé:</div>
+    <div class="row">${cands.map(h => `<button data-id="${h.p.id}">${h.p.title} (${label(h.p)})</button>`).join("")}</div>
+    <div class="row"><button data-act="none">Không phải các ý trên</button><button class="ghost" data-act="hide">✕ Bỏ qua</button></div>`);
+  el.onclick = (e) => {
+    const { id, act } = e.target.dataset;
+    if (act === "hide") return dismiss(el, "Đã bỏ qua câu hỏi làm rõ.");
+    if (act === "none") { dismiss(el, "Không có ý nào khớp."); trace("clarify: user chọn 'không phải' → ①"); return noGrounding(question); }
+    if (!id) return;
+    const hit = cands.find(h => h.p.id === id);
+    dismiss(el, `Bạn chọn: ${hit.p.title}.`);
+    trace(`clarify: user chọn ${id}`);
+    answer(question, { p: hit.p, score: hit.score });
+  };
+}
+
+// ---- Đường ③ No-grounding: báo giới hạn, chuyển TA ----
+function noGrounding(question) {
+  const el = addBot("bad", `
+    <div class="label">Bài đang mở không có nội dung này</div>
+    <div>Mình không tìm thấy đoạn nào trong Bài 7 (slide 1–4) nói về câu hỏi của bạn, nên mình không trả lời để tránh đoán sai kiến thức.</div>
+    <div class="row">
+      <button class="primary" data-act="ta">Hỏi TA (điền sẵn ngữ cảnh)</button>
+      <button data-act="edit">Hỏi lại theo cách khác</button>
+      <button class="ghost" data-act="hide">✕ Ẩn</button>
+    </div>`);
+  el.onclick = (e) => {
+    const act = e.target.dataset.act;
+    if (act === "ta") openTA(question);
+    if (act === "edit") { $("q").value = question; $("q").focus(); }
+    if (act === "hide") dismiss(el, "Đã ẩn.");
+  };
+}
+
+function openTA(question) {
+  $("taBody").textContent = `Bài: AI20k · Bài 7 — RAG cơ bản (slide 1–4)\nCâu hỏi: ${question}\nTutor: không tìm thấy căn cứ trong bài đang mở.`;
+  $("taDialog").showModal();
+  trace("handoff: mở form gửi TA");
+}
+$("taSend").onclick = () => { $("taDialog").close(); addBot("ok", `<div class="label">Đã gửi TA (giả lập)</div><div>TA sẽ trả lời trong kênh hỏi đáp của lớp.</div>`); };
+$("taCancel").onclick = () => $("taDialog").close();
+
+function ask(question) {
+  question = question.trim(); if (!question) return;
+  addUser(question);
+  const hits = retrieve(question);
+  const branch = decide(hits);
+  trace(`q="${question}" | top: ${hits.slice(0, 3).map(h => `${h.p.id}=${h.score}`).join(", ") || "none"} | → ${branch}`);
+  if (branch === "happy") answer(question, hits[0]);
+  else if (branch === "low_confidence") clarify(question, hits);
+  else noGrounding(question);
+}
+
+$("ask").onsubmit = (e) => { e.preventDefault(); ask($("q").value); $("q").value = ""; };
+document.querySelectorAll("[data-q]").forEach(b => b.onclick = () => ask(b.dataset.q));
+renderLesson();
+addBot("", `<div>Chào bạn! Hỏi mình bất cứ điều gì về <b>Bài 7: RAG cơ bản</b>. Mỗi câu trả lời đều có nút dẫn tới đúng slide/đoạn để bạn kiểm tra.</div>`);
+</script>
+</body>
+</html>
