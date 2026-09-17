@@ -194,7 +194,8 @@ function dismiss(el, note) { el.className = "dismissed"; el.textContent = note; 
 function answer(question, hit, opts = {}) {
   const p = hit.p;
   const el = addBot("ok", `
-    <div class="label">${opts.corrected ? "Đã trả lời lại theo nguồn bạn chọn" : "Có căn cứ trong bài"}</div>
+    <div class="label">${opts.corrected ? "Minh hoạ trả lời theo nguồn bạn chọn" : "Có căn cứ trong bài"}</div>
+    ${opts.corrected ? "<div><small>Mock dùng câu viết sẵn cho đoạn này. Hãy đối chiếu với câu hỏi và nguồn trước khi dùng.</small></div>" : ""}
     <div>${p.answer}</div>
     <div class="row"><button class="src" data-act="src">📄 ${label(p)}</button></div>
     <details><summary>Vì sao có câu trả lời này?</summary>
@@ -224,7 +225,7 @@ function correctSource(question, wrong, answerEl) {
   const el = addBot("warn", `
     <div class="label">Sửa nguồn</div>
     <div>Cảm ơn bạn. Phần nào trong bài đúng với điều bạn hỏi? Chọn một đoạn, mình sẽ trả lời lại chỉ dựa trên đoạn đó.</div>
-    <div class="row">${options.map(p => `<button data-id="${p.id}">${label(p)} — ${p.title}</button>`).join("")}</div>
+    <div class="row">${options.map(p => `<button data-id="${p.id}">${label(p)} — ${p.text.slice(0, 90)}…</button>`).join("")}</div>
     <div class="row"><button data-act="edit">Sửa câu hỏi thay vì chọn nguồn</button><button class="ghost" data-act="hide">✕ Bỏ qua</button></div>`);
   el.onclick = (e) => {
     const { id, act } = e.target.dataset;
@@ -282,7 +283,7 @@ function openTA(question) {
   $("taDialog").showModal();
   trace("handoff: mở form gửi TA");
 }
-$("taSend").onclick = () => { $("taDialog").close(); addBot("ok", `<div class="label">Đã gửi TA (giả lập)</div><div>TA sẽ trả lời trong kênh hỏi đáp của lớp.</div>`); };
+$("taSend").onclick = () => { $("taDialog").close(); addBot("warn", `<div class="label">Mô phỏng gửi TA</div><div>Chưa có tin nhắn nào được gửi. Khi nối hệ thống thật, câu hỏi sẽ chuyển tới kênh hỏi đáp của lớp.</div>`); };
 $("taCancel").onclick = () => $("taDialog").close();
 
 function ask(question) {
