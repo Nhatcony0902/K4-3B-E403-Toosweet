@@ -25,6 +25,18 @@ CASES = [
         True,
     ),
     (
+        "wrong_lesson",
+        {"status": "GROUNDED", "claims": [{"text": "Có căn cứ.", "citation_ids": ["c1"]}], "citations": [{"id": "c1", "lesson_id": "OTHER-LESSON", "segment_id": SEGMENT.segment_id, "quote": SEGMENT.quote}]},
+        0,
+        True,
+    ),
+    (
+        "duplicate_citation_id",
+        {"status": "GROUNDED", "claims": [{"text": "Có căn cứ.", "citation_ids": ["c1"]}], "citations": [{"id": "c1", "lesson_id": SEGMENT.lesson_id, "segment_id": SEGMENT.segment_id, "quote": SEGMENT.quote}, {"id": "c1", "lesson_id": SEGMENT.lesson_id, "segment_id": SEGMENT.segment_id, "quote": SEGMENT.quote}]},
+        0,
+        True,
+    ),
+    (
         "claim_without_citation",
         {"status": "GROUNDED", "claims": [{"text": "Ý ngoài nguồn.", "citation_ids": []}], "citations": []},
         0,
@@ -35,6 +47,12 @@ CASES = [
         {"status": "CLARIFY", "claims": [], "citations": [], "clarification_question": "Bạn muốn hỏi phần nào?"},
         1,
         True,
+    ),
+    (
+        "clarify_reason_normalized",
+        {"status": "CLARIFY", "reason_code": "SOURCE_UNCLEAR", "claims": [], "citations": [], "clarification_question": "Bạn muốn hỏi phần nào?"},
+        0,
+        False,
     ),
     (
         "no_source_has_draft",
@@ -50,6 +68,10 @@ def main():
     for name, candidate, clarify_count, should_fail in CASES:
         result, errors = validate(candidate, HIT, clarify_count)
         passed = bool(errors) == should_fail
+        if name == "second_clarify_blocked":
+            passed = passed and result["reason_code"] == "CLARIFY_LIMIT"
+        if name == "clarify_reason_normalized":
+            passed = passed and result["reason_code"] == ""
         rows.append({"case": name, "passed": passed, "validator_status": result["status"], "reason": result["reason_code"], "errors": errors})
     report = {"total": len(rows), "passed": sum(r["passed"] for r in rows), "failed": sum(not r["passed"] for r in rows), "rows": rows}
     (ROOT / "eval" / "validator_results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

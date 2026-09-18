@@ -10,7 +10,26 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from codebase.ai_tutor import answer_question  # noqa: E402
+from codebase.ai_tutor import KNOWLEDGE_BASE, Segment, answer_question  # noqa: E402
+
+
+def _case_sources(case):
+    if "source_fixture" in case:
+        return tuple(
+            Segment(
+                lesson_id=source["lesson_id"],
+                segment_id=source["segment_id"],
+                title=source["title"],
+                quote=source["quote"],
+                keywords=tuple(source["keywords"]),
+                quality=source.get("quality", "OK"),
+            )
+            for source in case["source_fixture"]
+        )
+    if "allowed_source_ids" not in case:
+        return None
+    index = {segment.segment_id: segment for segment in KNOWLEDGE_BASE}
+    return tuple(index[segment_id] for segment_id in case["allowed_source_ids"])
 
 
 def main() -> int:
@@ -33,10 +52,10 @@ def main() -> int:
             task_id=case["id"],
             clarify_count=1 if case["grid_values"]["interaction_history"] == "one_clarification_used" else 0,
             live=args.live,
-            source_issue=case["expected_reason"] if case["expected_reason"] in {"SOURCE_CONFLICT", "SOURCE_UNCLEAR", "SOURCE_FLAGGED"} else None,
+            source_segments=_case_sources(case),
         )
         reported_model = reported_model or trace.get("model", {}).get("model")
-        model_attempts += bool(trace.get("model", {}).get("prompt"))
+        model_attempts += bool(trace.get("model", {}).get("request_attempted"))
         model_responses += bool(trace.get("model", {}).get("raw_response"))
         result = trace["result"]
         status_match = result.get("status") == case["expected_status"]
@@ -65,6 +84,7 @@ def main() -> int:
     passed = sum(1 for row in rows if row["passed"])
     report = {
         "run": "run1",
+        "dataset_version": dataset["version"],
         "mode": "live_gemini" if args.live else "offline_routing_only",
         "model": reported_model,
         "model_attempts": model_attempts,

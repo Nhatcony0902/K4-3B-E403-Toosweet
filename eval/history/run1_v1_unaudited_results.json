@@ -1,0 +1,371 @@
+{
+  "run": "run1",
+  "mode": "live_gemini",
+  "model": "gemini-3.6-flash",
+  "model_attempts": 13,
+  "model_responses": 7,
+  "ai_call_verified": true,
+  "total": 20,
+  "passed": 9,
+  "failed": 11,
+  "pass_rate": 0.45,
+  "by_taxonomy": {
+    "01_source_truth": {
+      "total": 5,
+      "passed": 2,
+      "pass_rate": 0.4
+    },
+    "02_ambiguous_missing": {
+      "total": 5,
+      "passed": 1,
+      "pass_rate": 0.2
+    },
+    "03_out_of_scope": {
+      "total": 5,
+      "passed": 3,
+      "pass_rate": 0.6
+    },
+    "04_domain_specific": {
+      "total": 5,
+      "passed": 3,
+      "pass_rate": 0.6
+    }
+  },
+  "by_frequency": {
+    "common": {
+      "total": 10,
+      "passed": 7,
+      "pass_rate": 0.7
+    },
+    "rare": {
+      "total": 4,
+      "passed": 2,
+      "pass_rate": 0.5
+    },
+    "standard": {
+      "total": 6,
+      "passed": 0,
+      "pass_rate": 0.0
+    }
+  },
+  "rows": [
+    {
+      "case_id": "G01",
+      "taxonomy": "01_source_truth",
+      "frequency_class": "common",
+      "source_turn_id": "T10288",
+      "expected_status": "GROUNDED",
+      "expected_reason": "",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "PROCESSING_ERROR",
+      "status_match": false,
+      "reason_match": true,
+      "passed": false,
+      "latency_ms": 6607,
+      "failure_note": "expected GROUNDED/-, got NO_SOURCE/PROCESSING_ERROR"
+    },
+    {
+      "case_id": "G02",
+      "taxonomy": "01_source_truth",
+      "frequency_class": "common",
+      "source_turn_id": "T10315",
+      "expected_status": "GROUNDED",
+      "expected_reason": "",
+      "actual_status": "GROUNDED",
+      "actual_reason": "",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 14042,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G03",
+      "taxonomy": "01_source_truth",
+      "frequency_class": "rare",
+      "source_turn_id": "T10334",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "INSUFFICIENT_CONTENT",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "INSUFFICIENT_CONTENT",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 5435,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G04",
+      "taxonomy": "01_source_truth",
+      "frequency_class": "common",
+      "source_turn_id": "T11498",
+      "expected_status": "GROUNDED",
+      "expected_reason": "",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "PROCESSING_ERROR",
+      "status_match": false,
+      "reason_match": true,
+      "passed": false,
+      "latency_ms": 2204,
+      "failure_note": "expected GROUNDED/-, got NO_SOURCE/PROCESSING_ERROR"
+    },
+    {
+      "case_id": "G05",
+      "taxonomy": "01_source_truth",
+      "frequency_class": "standard",
+      "source_turn_id": "T12011",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "VALIDATION_FAILED",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "INSUFFICIENT_CONTENT",
+      "status_match": true,
+      "reason_match": false,
+      "passed": false,
+      "latency_ms": 4713,
+      "failure_note": "expected NO_SOURCE/VALIDATION_FAILED, got NO_SOURCE/INSUFFICIENT_CONTENT"
+    },
+    {
+      "case_id": "G06",
+      "taxonomy": "02_ambiguous_missing",
+      "frequency_class": "common",
+      "source_turn_id": "T12551",
+      "expected_status": "CLARIFY",
+      "expected_reason": "",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "PROCESSING_ERROR",
+      "status_match": false,
+      "reason_match": true,
+      "passed": false,
+      "latency_ms": 6033,
+      "failure_note": "expected CLARIFY/-, got NO_SOURCE/PROCESSING_ERROR"
+    },
+    {
+      "case_id": "G07",
+      "taxonomy": "02_ambiguous_missing",
+      "frequency_class": "common",
+      "source_turn_id": "T12611",
+      "expected_status": "CLARIFY",
+      "expected_reason": "",
+      "actual_status": "CLARIFY",
+      "actual_reason": "SOURCE_UNCLEAR",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 4593,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G08",
+      "taxonomy": "02_ambiguous_missing",
+      "frequency_class": "standard",
+      "source_turn_id": "T12765",
+      "expected_status": "GROUNDED",
+      "expected_reason": "",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "PROCESSING_ERROR",
+      "status_match": false,
+      "reason_match": true,
+      "passed": false,
+      "latency_ms": 11849,
+      "failure_note": "expected GROUNDED/-, got NO_SOURCE/PROCESSING_ERROR"
+    },
+    {
+      "case_id": "G09",
+      "taxonomy": "02_ambiguous_missing",
+      "frequency_class": "standard",
+      "source_turn_id": null,
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "CLARIFY_LIMIT",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "PROCESSING_ERROR",
+      "status_match": true,
+      "reason_match": false,
+      "passed": false,
+      "latency_ms": 7551,
+      "failure_note": "expected NO_SOURCE/CLARIFY_LIMIT, got NO_SOURCE/PROCESSING_ERROR"
+    },
+    {
+      "case_id": "G10",
+      "taxonomy": "02_ambiguous_missing",
+      "frequency_class": "rare",
+      "source_turn_id": null,
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "INSUFFICIENT_CONTENT",
+      "actual_status": "CLARIFY",
+      "actual_reason": "SOURCE_UNCLEAR",
+      "status_match": false,
+      "reason_match": false,
+      "passed": false,
+      "latency_ms": 7964,
+      "failure_note": "expected NO_SOURCE/INSUFFICIENT_CONTENT, got CLARIFY/SOURCE_UNCLEAR"
+    },
+    {
+      "case_id": "G11",
+      "taxonomy": "03_out_of_scope",
+      "frequency_class": "common",
+      "source_turn_id": "T12768",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SCOPE_ADMIN",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "SCOPE_ADMIN",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 0,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G12",
+      "taxonomy": "03_out_of_scope",
+      "frequency_class": "common",
+      "source_turn_id": "T12768",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SCOPE_REFUSE",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "SCOPE_REFUSE",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 0,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G13",
+      "taxonomy": "03_out_of_scope",
+      "frequency_class": "common",
+      "source_turn_id": "T12768",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SCOPE_REFUSE",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "SCOPE_REFUSE",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 0,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G14",
+      "taxonomy": "03_out_of_scope",
+      "frequency_class": "rare",
+      "source_turn_id": null,
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SCOPE_REFUSE",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "INSUFFICIENT_CONTENT",
+      "status_match": true,
+      "reason_match": false,
+      "passed": false,
+      "latency_ms": 5768,
+      "failure_note": "expected NO_SOURCE/SCOPE_REFUSE, got NO_SOURCE/INSUFFICIENT_CONTENT"
+    },
+    {
+      "case_id": "G15",
+      "taxonomy": "03_out_of_scope",
+      "frequency_class": "standard",
+      "source_turn_id": null,
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SCOPE_ADMIN",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "INSUFFICIENT_CONTENT",
+      "status_match": true,
+      "reason_match": false,
+      "passed": false,
+      "latency_ms": 0,
+      "failure_note": "expected NO_SOURCE/SCOPE_ADMIN, got NO_SOURCE/INSUFFICIENT_CONTENT"
+    },
+    {
+      "case_id": "G16",
+      "taxonomy": "04_domain_specific",
+      "frequency_class": "common",
+      "source_turn_id": "T10292",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SOURCE_CONFLICT",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "SOURCE_CONFLICT",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 0,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G17",
+      "taxonomy": "04_domain_specific",
+      "frequency_class": "common",
+      "source_turn_id": "T10306",
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SOURCE_UNCLEAR",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "SOURCE_UNCLEAR",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 0,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G18",
+      "taxonomy": "04_domain_specific",
+      "frequency_class": "standard",
+      "source_turn_id": null,
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "INSUFFICIENT_CONTENT",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "VALIDATION_FAILED",
+      "status_match": true,
+      "reason_match": false,
+      "passed": false,
+      "latency_ms": 12472,
+      "failure_note": "expected NO_SOURCE/INSUFFICIENT_CONTENT, got NO_SOURCE/VALIDATION_FAILED"
+    },
+    {
+      "case_id": "G19",
+      "taxonomy": "04_domain_specific",
+      "frequency_class": "rare",
+      "source_turn_id": null,
+      "expected_status": "NO_SOURCE",
+      "expected_reason": "SOURCE_FLAGGED",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "SOURCE_FLAGGED",
+      "status_match": true,
+      "reason_match": true,
+      "passed": true,
+      "latency_ms": 0,
+      "failure_note": ""
+    },
+    {
+      "case_id": "G20",
+      "taxonomy": "04_domain_specific",
+      "frequency_class": "standard",
+      "source_turn_id": null,
+      "expected_status": "GROUNDED",
+      "expected_reason": "",
+      "actual_status": "NO_SOURCE",
+      "actual_reason": "PROCESSING_ERROR",
+      "status_match": false,
+      "reason_match": true,
+      "passed": false,
+      "latency_ms": 3255,
+      "failure_note": "expected GROUNDED/-, got NO_SOURCE/PROCESSING_ERROR"
+    }
+  ],
+  "failure_analysis": [
+    {
+      "observed": "CLARIFY/SOURCE_UNCLEAR",
+      "count": 1
+    },
+    {
+      "observed": "NO_SOURCE/INSUFFICIENT_CONTENT",
+      "count": 3
+    },
+    {
+      "observed": "NO_SOURCE/PROCESSING_ERROR",
+      "count": 6
+    },
+    {
+      "observed": "NO_SOURCE/VALIDATION_FAILED",
+      "count": 1
+    }
+  ]
+}

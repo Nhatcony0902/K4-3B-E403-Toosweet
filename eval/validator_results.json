@@ -1,6 +1,6 @@
 {
-  "total": 5,
-  "passed": 5,
+  "total": 8,
+  "passed": 8,
   "failed": 0,
   "rows": [
     {
@@ -20,6 +20,24 @@
       ]
     },
     {
+      "case": "wrong_lesson",
+      "passed": true,
+      "validator_status": "NO_SOURCE",
+      "reason": "VALIDATION_FAILED",
+      "errors": [
+        "citation c1 lesson_id does not match source"
+      ]
+    },
+    {
+      "case": "duplicate_citation_id",
+      "passed": true,
+      "validator_status": "NO_SOURCE",
+      "reason": "VALIDATION_FAILED",
+      "errors": [
+        "citation id c1 is duplicated"
+      ]
+    },
+    {
       "case": "claim_without_citation",
       "passed": true,
       "validator_status": "NO_SOURCE",
@@ -33,10 +51,17 @@
       "case": "second_clarify_blocked",
       "passed": true,
       "validator_status": "NO_SOURCE",
-      "reason": "VALIDATION_FAILED",
+      "reason": "CLARIFY_LIMIT",
       "errors": [
         "clarification limit reached"
       ]
+    },
+    {
+      "case": "clarify_reason_normalized",
+      "passed": true,
+      "validator_status": "CLARIFY",
+      "reason": "",
+      "errors": []
     },
     {
       "case": "no_source_has_draft",
@@ -44,7 +69,8 @@
       "validator_status": "NO_SOURCE",
       "reason": "VALIDATION_FAILED",
       "errors": [
-        "NO_SOURCE cannot contain claims or citations"
+        "NO_SOURCE cannot contain claims or citations",
+        "NO_SOURCE has an invalid reason_code"
       ]
     }
   ]

@@ -59,7 +59,7 @@ Kiểm tra mã và trích đoạn là kiểm tra bằng code. Kiểm tra một �
 
 ### Mức prototype và automation
 
-**CP2 hiện tại:** [bản bấm thử](../prototype/index.html), 0 lời gọi AI, phù hợp mốc CP2 cho phép chưa cần AI theo guide §3.1. **CP3 đang triển khai:** [ ] Sketch [x] Mock [ ] Working — flow bấm được, dữ liệu có thể giả lập, lõi đã tích hợp đường gọi Gemini và trace/validator. Chỉ khai đạt đầy đủ mức Mock theo guide §3.2 sau khi có ít nhất một phản hồi model hợp lệ; lần chạy trong môi trường hiện tại chưa xác minh được vì `GEMINI_API_KEY` bị Google trả `API_KEY_INVALID`.
+**CP2 hiện tại:** [bản bấm thử](../prototype/index.html), 0 lời gọi AI, phù hợp mốc CP2 cho phép chưa cần AI theo guide §3.1. **CP3 đang triển khai:** [ ] Sketch [x] Mock [ ] Working — flow bấm được, dữ liệu có thể giả lập, lõi đã tích hợp đường gọi Gemini 3.6 Flash và trace/validator. Lượt chạy 18/9 đã nhận phản hồi thật từ model, nên điều kiện có AI ở lõi đã được chứng minh; chất lượng trả lời cần đo lại trên golden set đã kiểm tra nguồn gốc.
 
 | Thành phần | CP2 hiện có | Thiết kế CP3 sau review |
 |---|---|---|
@@ -196,11 +196,11 @@ Phạm vi nguồn được giữ qua các lượt làm rõ/correction cho đến
 
 - Lõi đã được triển khai tại [`codebase/ai_tutor.py`](ai_tutor.py): định tuyến hành chính/từ chối, truy xuất top-k, gọi Gemini REST thật qua `GEMINI_API_KEY`, parse JSON và validator trước khi trả kết quả.
 - Demo có thể chạy bằng [`codebase/server.py`](server.py) và mở `/?ai=1`; giao diện gọi `/api/ask` theo thời gian thực. CP2 vẫn mở được khi không có query `ai=1`.
-- Golden set tại [`eval/golden_set.json`](../eval/golden_set.json) có 20 case, 5 case mỗi lớp ①–④, 10 case `common`, 4 case `rare`, và 10 case có `source_turn_id` phát triển từ chatlog riêng. Câu hỏi trong file đã rút gọn, không chứa raw chatlog hay dữ liệu khảo sát.
-- Bộ kiểm tra validator độc lập tại [`eval/validator_tests.py`](../eval/validator_tests.py) đạt 5/5, gồm citation giả, claim thiếu citation, giới hạn hỏi lại và draft trong `NO_SOURCE`.
-- Lượt đo đầu được lưu ở [`eval/run1_results.json`](../eval/run1_results.json) và trace ở [`eval/run1_trace.jsonl`](../eval/run1_trace.jsonl). Lệnh đã chạy đủ 20 case với chế độ live; 6/20 đạt (30%), 14 case lỗi `PROCESSING_ERROR` vì key Gemini của môi trường chạy trả `API_KEY_INVALID`. Đây là số liệu trung thực của lần chạy, chưa phải quality bar cuối cùng. Sau khi đặt key hợp lệ, chạy lại `python eval/run_eval.py --live`.
+- Golden set phiên bản `cp3-v2-source-audited` tại [`eval/golden_set.json`](../eval/golden_set.json) có 20 case, 5 case mỗi lớp ①–④, 10 case `common`, 4 case `rare`, và 12 `source_turn_id` khác nhau đã đối chiếu ý hỏi trong chatlog K4 không preset. Câu hỏi đã rút gọn, không chứa raw chatlog hay dữ liệu khảo sát. Case chất lượng nguồn dùng fixture/cờ riêng, không truyền nhãn mong đợi vào tutor.
+- Bộ kiểm tra validator độc lập tại [`eval/validator_tests.py`](../eval/validator_tests.py) đạt 8/8, gồm mã nguồn giả, sai bài, citation trùng/thiếu, giới hạn hỏi lại và draft trong `NO_SOURCE`.
+- Lượt đo 18/9 trên golden set cũ ghi 9/20 (45%), 7 phản hồi thật và 6 lỗi HTTP 503. Sau audit, phát hiện nhiều `source_turn_id` không khớp ý hỏi và 3 case được truyền nhãn mong đợi vào xử lý; **45% không dùng làm ước lượng chất lượng model**. Cần chạy lại `python eval/run_eval.py --live` trên phiên bản v2. Trace và kết quả cũ được giữ để đối chiếu nguyên nhân, không coi là kết quả v2.
 - **Chiều chất lượng:** đủ căn cứ với yêu cầu cụ thể; mỗi ý được trích đoạn hỗ trợ; rẽ nhánh đúng; correction không bỏ qua kiểm tra.
-- **Golden set:** đã tạo [`eval/golden_set.json`](../eval/golden_set.json) với 20 case theo guide, 10 case lấy/phát triển từ chatlog thật, 5 case cho mỗi lớp ①–④ và case transcript `T06-126` được giữ như case bổ sung, không tính thay cho quota chatlog.
+- **Golden set:** đã tạo [`eval/golden_set.json`](../eval/golden_set.json) với 20 case theo guide, 12 case lấy/phát triển từ chatlog thật và 5 case cho mỗi lớp ①–④. Case transcript `T06-126` hiện ở danh sách kịch bản §5, chưa nằm trong bộ 20 và không tính quota chatlog.
 - **Các case cần thêm sau review:** đoạn chứa từ khóa nhưng thiếu lời giải; citation tồn tại nhưng không hỗ trợ ý; citation thiếu/giả/thuộc bài khác/ngoài tập nguồn của lượt gọi; một ý trong câu trả lời nhiều ý không có citation; chọn nguồn không liên quan phải ra `NO_SOURCE`; làm rõ sau correction vẫn giữ giới hạn nguồn; sửa giải thích vẫn qua validator; danh sách sửa nguồn tối đa 3 mục từ top-k khác; lỗi validator không làm lộ nháp.
 - **Case cho review bổ sung:** câu hỏi hành chính không thành thiếu nguồn; injection trực tiếp/trong nguồn bị bỏ qua và không tiết lộ prompt; câu hỏi học thuật trích injection không bị từ chối nhầm; hai đoạn đồng thuận được dùng nhưng hai đoạn mâu thuẫn phải báo vấn đề; chỗ `[không nghe rõ]` liên quan/không liên quan; nguồn gắn cờ sai; correction không bỏ cờ mâu thuẫn; không có câu hỏi làm rõ thứ hai kể cả qua correction/retry; chỉ nhiệm vụ mới do học viên mở mới reset bộ đếm; thẻ câu trả lời không lộ điểm/ngưỡng; CP3 có AI call thật và trace.
 - **Cách chấm:** người đọc nguồn xác nhận nhãn và ý được hỗ trợ; đo riêng tỷ lệ false `GROUNDED` (hiện giải thích khi thiếu căn cứ) và tỷ lệ từ chối sai trên case đủ căn cứ. Đánh giá khả năng chặn lỗi của validator với cả nháp tự tạo lỗi, không chỉ đầu ra tự nhiên của model. Case nhân tạo kiểm tra validator không thay cho case phát triển từ chatlog.
@@ -209,8 +209,10 @@ Phạm vi nguồn được giữ qua các lượt làm rõ/correction cho đến
 
 | Lượt | Chế độ | Tổng | Đạt | Không đạt | Tỷ lệ | Ghi chú |
 |---|---|---:|---:|---:|---:|---|
-| run1 · 18/9 | live Gemini | 20 | 6 | 14 | 30% | 14 case `PROCESSING_ERROR` do key môi trường bị Google trả `API_KEY_INVALID`; xem `eval/run1_results.json` |
-| validator probes · 18/9 | deterministic | 5 | 5 | 0 | 100% | Citation giả, thiếu citation, giới hạn CLARIFY và draft trong `NO_SOURCE` đều bị chặn |
+| run0 · 18/9 | live Gemini, key không hợp lệ | 20 | 6 | 14 | 30% | 13 case gọi model bị `API_KEY_INVALID`; tỷ lệ không đo chất lượng AI |
+| run1 v1 · 18/9 | live Gemini 3.6, golden set cũ | 20 | 9 | 11 | 45% | 7 phản hồi model, 6 lỗi HTTP 503; bộ case cũ không đạt audit nguồn gốc và có rò nhãn kỳ vọng |
+| run1 v2 | chờ chạy lại | 20 | — | — | — | Golden set đã audit, fixture tách khỏi đáp án kỳ vọng, retry ngắn khi HTTP 503 |
+| validator probes · 18/9 | deterministic | 8 | 8 | 0 | 100% | Citation giả/sai bài/trùng, thiếu citation, giới hạn CLARIFY và draft trong `NO_SOURCE` đều bị chặn |
 
 ## §8. Phân công & kế hoạch
 - Phân công hiện ghi trong README nhóm: Phạm Long Nhật — spec, prompt và tiêu chí đủ căn cứ; Nguyễn Tiến Lượng — prototype, gọi model ở CP3 và user test; Lê Thanh Tình — mining evidence và demo. Phần golden set/eval cần nhóm phân công rõ trước CP3.
