@@ -59,7 +59,7 @@ Kiểm tra mã và trích đoạn là kiểm tra bằng code. Kiểm tra một �
 
 ### Mức prototype và automation
 
-**CP2 hiện tại:** [bản bấm thử](../prototype/index.html), 0 lời gọi AI, phù hợp mốc CP2 cho phép chưa cần AI theo guide §3.1. **CP3 đang triển khai:** [ ] Sketch [x] Mock [ ] Working — flow bấm được, dữ liệu có thể giả lập, lõi gọi Gemini 3.6 Flash qua OpenRouter và chạy trace/validator. Lượt chạy Gemini API trực tiếp ngày 18/9 đã chứng minh có AI thật ở lõi; lượt OpenRouter cần đo riêng trên golden set đã kiểm tra nguồn gốc.
+**CP2 hiện tại:** [bản bấm thử](../prototype/index.html), 0 lời gọi AI, phù hợp mốc CP2 cho phép chưa cần AI theo guide §3.1. **CP3 đang triển khai:** [ ] Sketch [x] Mock [ ] Working — flow bấm được, dữ liệu có thể giả lập, lõi gọi Gemini 3.6 Flash qua OpenRouter và chạy trace/validator. Lượt OpenRouter `run2` ngày 18/9 đã nhận 8/8 phản hồi model thật trên golden set đã kiểm tra nguồn gốc; kết quả và giới hạn phép đo được ghi ở [`eval/run2_analysis.md`](../eval/run2_analysis.md).
 
 | Thành phần | CP2 hiện có | Thiết kế CP3 sau review |
 |---|---|---|
@@ -199,6 +199,7 @@ Phạm vi nguồn được giữ qua các lượt làm rõ/correction cho đến
 - Golden set phiên bản `cp3-v2-source-audited` tại [`eval/golden_set.json`](../eval/golden_set.json) có 20 case, 5 case mỗi lớp ①–④, 10 case `common`, 4 case `rare`, và 12 `source_turn_id` khác nhau đã đối chiếu ý hỏi trong chatlog K4 không preset. Câu hỏi đã rút gọn, không chứa raw chatlog hay dữ liệu khảo sát. Case chất lượng nguồn dùng fixture/cờ riêng, không truyền nhãn mong đợi vào tutor.
 - Bộ kiểm tra validator độc lập tại [`eval/validator_tests.py`](../eval/validator_tests.py) đạt 8/8, gồm mã nguồn giả, sai bài, citation trùng/thiếu, giới hạn hỏi lại và draft trong `NO_SOURCE`.
 - Lượt đo 18/9 trên golden set cũ ghi 9/20 (45%), 7 phản hồi thật và 6 lỗi HTTP 503. Sau audit, phát hiện nhiều `source_turn_id` không khớp ý hỏi và 3 case được truyền nhãn mong đợi vào xử lý; **45% không dùng làm ước lượng chất lượng model**. Lượt v2 đã chạy trên bộ đã audit: sau khi sửa lỗi chấm trạng thái dự phòng, kết quả là 17/20 (85%), 5 phản hồi model thật và 3 case HTTP 429 không có phản hồi. Chi tiết và giới hạn phép đo ở [`eval/run1_analysis.md`](../eval/run1_analysis.md).
+- Lượt OpenRouter `run2` trên cùng bộ đã audit đạt 19/20 (95%) theo trạng thái đầu ra cuối cùng, 8/8 lời gọi có phản hồi và không có lỗi hạ tầng. G01 không đạt vì JSON phản hồi bị cắt; 5/8 phản hồi model thành `NO_SOURCE/VALIDATION_FAILED` (một lỗi parse, bốn lỗi validator). Xem [`eval/run2_analysis.md`](../eval/run2_analysis.md) trước khi dùng tỷ lệ 95% làm nhận định chất lượng.
 - **Chiều chất lượng:** đủ căn cứ với yêu cầu cụ thể; mỗi ý được trích đoạn hỗ trợ; rẽ nhánh đúng; correction không bỏ qua kiểm tra.
 - **Golden set:** đã tạo [`eval/golden_set.json`](../eval/golden_set.json) với 20 case theo guide, 12 case lấy/phát triển từ chatlog thật và 5 case cho mỗi lớp ①–④. Case transcript `T06-126` hiện ở danh sách kịch bản §5, chưa nằm trong bộ 20 và không tính quota chatlog.
 - **Các case cần thêm sau review:** đoạn chứa từ khóa nhưng thiếu lời giải; citation tồn tại nhưng không hỗ trợ ý; citation thiếu/giả/thuộc bài khác/ngoài tập nguồn của lượt gọi; một ý trong câu trả lời nhiều ý không có citation; chọn nguồn không liên quan phải ra `NO_SOURCE`; làm rõ sau correction vẫn giữ giới hạn nguồn; sửa giải thích vẫn qua validator; danh sách sửa nguồn tối đa 3 mục từ top-k khác; lỗi validator không làm lộ nháp.
@@ -212,6 +213,7 @@ Phạm vi nguồn được giữ qua các lượt làm rõ/correction cho đến
 | run0 · 18/9 | live Gemini, key không hợp lệ | 20 | 6 | 14 | 30% | 13 case gọi model bị `API_KEY_INVALID`; tỷ lệ không đo chất lượng AI |
 | run1 v1 · 18/9 | live Gemini 3.6, golden set cũ | 20 | 9 | 11 | 45% | 7 phản hồi model, 6 lỗi HTTP 503; bộ case cũ không đạt audit nguồn gốc và có rò nhãn kỳ vọng |
 | run1 v2 · 18/9 | live Gemini 3.6, golden set đã audit | 20 | 17 | 3 | 85% | 8 lần gọi, 5 phản hồi; G04/G05/G20 bị HTTP 429. Số 95% in ban đầu là lỗi chấm fallback, đã tính lại từ trace gốc |
+| run2 · 18/9 | live OpenRouter / Gemini 3.6, golden set đã audit | 20 | 19 | 1 | 95% | 8 lần gọi, 8 phản hồi; G01 JSON bị cắt, 5 phản hồi thành `VALIDATION_FAILED` |
 | validator probes · 18/9 | deterministic | 8 | 8 | 0 | 100% | Citation giả/sai bài/trùng, thiếu citation, giới hạn CLARIFY và draft trong `NO_SOURCE` đều bị chặn |
 
 ## §8. Phân công & kế hoạch
