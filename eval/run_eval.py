@@ -9,8 +9,8 @@ import sys
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "codebase"))
-from ai_tutor import answer_question  # noqa: E402
+sys.path.insert(0, str(ROOT))
+from codebase.ai_tutor import answer_question  # noqa: E402
 
 
 def main() -> int:
