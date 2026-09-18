@@ -16,6 +16,8 @@ Remove-Variable secret
 
 Model mặc định là `google/gemini-3.6-flash`, cùng phiên bản Gemini đã dùng ở lượt đo trước. Có thể chọn model khác bằng biến môi trường `OPENROUTER_MODEL` hoặc tham số `--model` khi chạy `ai_tutor.py`. OpenRouter dùng [Chat Completions API](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request) và [model slug này](https://openrouter.ai/google/gemini-3.6-flash).
 
+Request giới hạn tối đa 2.048 token đầu ra bằng `max_completion_tokens`. Giới hạn này tránh để OpenRouter dự trù mức tối đa 65.536 token của model và trả HTTP 402 khi key chỉ có ít credit; số token thực dùng vẫn phụ thuộc nội dung phản hồi.
+
 Có thể kiểm tra lõi trực tiếp:
 
 ```powershell

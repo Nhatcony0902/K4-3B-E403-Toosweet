@@ -31,6 +31,7 @@ from urllib.request import Request, urlopen
 
 STATUSES = {"GROUNDED", "CLARIFY", "NO_SOURCE"}
 DEFAULT_OPENROUTER_MODEL = "google/gemini-3.6-flash"
+DEFAULT_MAX_COMPLETION_TOKENS = 2048
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 REASONS = {
     "INSUFFICIENT_CONTENT", "SOURCE_CONFLICT", "SOURCE_UNCLEAR",
@@ -151,6 +152,7 @@ def call_openrouter(prompt: str, model: str | None = None, timeout: int = 45) ->
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.1,
+        "max_completion_tokens": DEFAULT_MAX_COMPLETION_TOKENS,
         "response_format": {"type": "json_object"},
     }
     req = Request(

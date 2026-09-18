@@ -29,6 +29,7 @@ class OpenRouterTests(unittest.TestCase):
         self.assertNotIn("test-secret", request.full_url)
         self.assertEqual(payload["model"], model)
         self.assertEqual(payload["messages"], [{"role": "user", "content": "test prompt"}])
+        self.assertEqual(payload["max_completion_tokens"], 2048)
         self.assertEqual(payload["response_format"], {"type": "json_object"})
 
     def test_http_error_does_not_expose_key(self):
