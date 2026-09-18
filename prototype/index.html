@@ -286,8 +286,48 @@ function openTA(question) {
 $("taSend").onclick = () => { $("taDialog").close(); addBot("warn", `<div class="label">Mô phỏng gửi TA</div><div>Chưa có tin nhắn nào được gửi. Khi nối hệ thống thật, câu hỏi sẽ chuyển tới kênh hỏi đáp của lớp.</div>`); };
 $("taCancel").onclick = () => $("taDialog").close();
 
+const AI_MODE = new URLSearchParams(location.search).get("ai") === "1";
+
+function renderLiveResult(question, payload) {
+  const result = payload?.result || payload || {};
+  const status = result.status || "NO_SOURCE";
+  trace(`live-ai | status=${status} | reason=${result.reason_code || "-"} | task=${payload.task_id || "-"}`);
+  if (status === "GROUNDED") {
+    const claims = (result.claims || []).map(c => `<li>${esc(c.text)} ${((c.citation_ids || []).map(id => {
+      const citation = (result.citations || []).find(x => x.id === id);
+      return citation ? `<button class="src" data-live-src="${esc(citation.segment_id || "")}">Nguồn ${esc(citation.segment_id || id)}</button>` : "";
+    }).join(" "))}</li>`).join("");
+    const cites = (result.citations || []).map(c => `<blockquote>${esc(c.quote || "")}</blockquote>`).join("");
+    const el = addBot("ok", `<div class="label">AI thật · Có căn cứ</div><ul>${claims}</ul><details><summary>Vì sao có câu trả lời này?</summary>${cites}</details><div class="row"><button data-act="hide">Ẩn</button></div>`);
+    el.querySelectorAll("[data-live-src]").forEach(btn => btn.onclick = () => highlight(String(btn.dataset.liveSrc).toLowerCase().replace("p", "p")));
+    el.querySelector("[data-act=hide]").onclick = () => dismiss(el, "Đã ẩn câu trả lời.");
+    return;
+  }
+  if (status === "CLARIFY") {
+    addBot("warn", `<div class="label">AI thật · Cần làm rõ</div><div>${esc(result.clarification_question || "Bạn muốn hỏi phần nào trong bài?")}</div>`);
+    return;
+  }
+  const el = addBot("bad", `<div class="label">AI thật · Chưa đủ căn cứ</div><div>${esc(result.message || "Mình chưa đủ căn cứ trong các đoạn tìm được để trả lời câu này.")}</div>`);
+  el.querySelector("[data-act=hide]")?.addEventListener("click", () => dismiss(el, "Đã ẩn."));
+}
+
+async function askLive(question) {
+  addUser(question);
+  const pending = addBot("warn", `<div class="label">Đang gọi AI thật…</div><div>Đang truy xuất nguồn và kiểm tra câu trả lời.</div>`);
+  try {
+    const response = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+    const payload = await response.json();
+    dismiss(pending, "Đã nhận phản hồi AI thật.");
+    renderLiveResult(question, payload);
+  } catch (error) {
+    dismiss(pending, "Không gọi được AI thật; hãy kiểm tra server và GEMINI_API_KEY.");
+    trace(`live-ai error: ${error.message}`);
+  }
+}
+
 function ask(question) {
   question = question.trim(); if (!question) return;
+  if (AI_MODE) { askLive(question); return; }
   addUser(question);
   const hits = retrieve(question);
   const branch = decide(hits);

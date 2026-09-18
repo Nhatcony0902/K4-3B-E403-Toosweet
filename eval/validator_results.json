@@ -1,0 +1,51 @@
+{
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "rows": [
+    {
+      "case": "valid_grounded",
+      "passed": true,
+      "validator_status": "GROUNDED",
+      "reason": "",
+      "errors": []
+    },
+    {
+      "case": "fake_citation_segment",
+      "passed": true,
+      "validator_status": "NO_SOURCE",
+      "reason": "VALIDATION_FAILED",
+      "errors": [
+        "citation c1 points outside allowed sources"
+      ]
+    },
+    {
+      "case": "claim_without_citation",
+      "passed": true,
+      "validator_status": "NO_SOURCE",
+      "reason": "VALIDATION_FAILED",
+      "errors": [
+        "GROUNDED must contain at least one citation",
+        "claim 0 has missing citation"
+      ]
+    },
+    {
+      "case": "second_clarify_blocked",
+      "passed": true,
+      "validator_status": "NO_SOURCE",
+      "reason": "VALIDATION_FAILED",
+      "errors": [
+        "clarification limit reached"
+      ]
+    },
+    {
+      "case": "no_source_has_draft",
+      "passed": true,
+      "validator_status": "NO_SOURCE",
+      "reason": "VALIDATION_FAILED",
+      "errors": [
+        "NO_SOURCE cannot contain claims or citations"
+      ]
+    }
+  ]
+}
