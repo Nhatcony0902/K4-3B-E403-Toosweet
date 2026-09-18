@@ -5,4 +5,5 @@ data/
 survey-raw/
 *.xlsx
 __pycache__/
+.venv/
 node_modules/
