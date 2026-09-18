@@ -21,7 +21,8 @@ def main() -> int:
     dataset = json.loads((ROOT / "eval" / "golden_set.json").read_text(encoding="utf-8"))
     cases = dataset["cases"][: args.limit]
     rows = []
-    last_trace = None
+    reported_model = None
+    model_responses = 0
     trace_path = ROOT / "eval" / "run1_trace.jsonl"
     trace_path.write_text("", encoding="utf-8")
     for case in cases:
@@ -33,7 +34,8 @@ def main() -> int:
             live=args.live,
             source_issue=case["expected_reason"] if case["expected_reason"] in {"SOURCE_CONFLICT", "SOURCE_UNCLEAR", "SOURCE_FLAGGED"} else None,
         )
-        last_trace = trace
+        reported_model = reported_model or trace.get("model", {}).get("model")
+        model_responses += bool(trace.get("model", {}).get("raw_response"))
         result = trace["result"]
         status_match = result.get("status") == case["expected_status"]
         reason_match = not case["expected_reason"] or result.get("reason_code") == case["expected_reason"]
@@ -62,7 +64,8 @@ def main() -> int:
     report = {
         "run": "run1",
         "mode": "live_gemini" if args.live else "offline_routing_only",
-        "model": last_trace.get("model", {}).get("model") if last_trace else None,
+        "model": reported_model,
+        "model_responses": model_responses,
         "total": len(rows),
         "passed": passed,
         "failed": len(rows) - passed,

@@ -30,6 +30,7 @@ from urllib.request import Request, urlopen
 
 
 STATUSES = {"GROUNDED", "CLARIFY", "NO_SOURCE"}
+DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
 REASONS = {
     "INSUFFICIENT_CONTENT", "SOURCE_CONFLICT", "SOURCE_UNCLEAR",
     "SOURCE_FLAGGED", "CLARIFY_LIMIT", "VALIDATION_FAILED",
@@ -143,7 +144,7 @@ def call_gemini(prompt: str, model: str | None = None, timeout: int = 45) -> tup
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not set")
-    model = model or os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    model = model or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}}
     req = Request(url, data=json.dumps(payload, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
@@ -261,11 +262,11 @@ def answer_question(question: str, *, task_id: str | None = None, clarify_count:
     sources = _source_payload(hits)
     prompt = build_prompt(question, sources, clarify_count)
     raw = None
-    used_model = None
+    used_model = model or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
     try:
         if not live:
             raise RuntimeError("live call disabled")
-        used_model, raw = call_gemini(prompt, model=model)
+        used_model, raw = call_gemini(prompt, model=used_model)
         candidate = _extract_json(raw)
         result, errors = validate(candidate, hits, clarify_count)
         if errors:

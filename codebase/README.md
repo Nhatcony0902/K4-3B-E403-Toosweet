@@ -12,6 +12,8 @@ python codebase/server.py
 
 3. Mở <http://127.0.0.1:8000/?ai=1>. Khi gửi câu hỏi, trình duyệt gọi `/api/ask`; server truy xuất top-k, gọi Gemini thật và chạy validator trước khi render.
 
+Model mặc định là `gemini-3.6-flash`. Có thể chọn model khác bằng biến môi trường `GEMINI_MODEL` hoặc tham số `--model` khi chạy `ai_tutor.py`.
+
 Có thể kiểm tra lõi trực tiếp:
 
 ```powershell
