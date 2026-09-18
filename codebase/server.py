@@ -49,6 +49,8 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"CP3 tutor: http://127.0.0.1:{port}/?ai=1")

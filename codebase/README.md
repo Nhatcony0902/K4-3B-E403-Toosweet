@@ -28,4 +28,6 @@ Trace trả về gồm prompt, phản hồi thô, nguồn được phép, kết 
 
 ## Video CP3 30 giây
 
-Chạy server và mở `http://127.0.0.1:8000/?ai=1`. Chỉ quay cửa sổ trình duyệt: nhập “RAG là gì?”, bấm gửi, chờ câu trả lời AI thật và mở trích dẫn. Giữ terminal/API key ngoài khung hình. Lưu video để đội trưởng nộp cùng số đo từ `eval/run1_results.json`.
+Chạy server và mở `http://127.0.0.1:8000/?ai=1`. Chỉ quay cửa sổ trình duyệt: nhập “Tại sao RAG giúp giảm ảo giác của LLM?”, bấm gửi, chờ câu trả lời AI thật và mở trích dẫn. Giữ terminal/API key ngoài khung hình. Lưu video để đội trưởng nộp cùng số đo từ `eval/run2_results.json`.
+
+Dùng câu hỏi của case `G02` vì đây là một trong ba case đã nhận `GROUNDED` qua validator ở lượt `run2`; `G08` (“Ngưỡng similarity trong bài dùng để làm gì?”) và `G20` là hai câu dự phòng. Không dùng “RAG là gì?” (`G01`) làm câu quay chính: ở `run2` phản hồi bị cắt giữa chừng nên UI hiện nhánh chưa đủ căn cứ. Chạy thử câu định quay một lần trước khi bấm ghi hình.
