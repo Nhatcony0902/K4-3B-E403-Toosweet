@@ -4,7 +4,7 @@
 
 ## Chạy lượt đo
 
-Từ thư mục gốc repo, sau khi đặt `GEMINI_API_KEY` trong terminal:
+Từ thư mục gốc repo, sau khi đặt `OPENROUTER_API_KEY` trong terminal:
 
 ```powershell
 python eval/run_eval.py --live --run-name run2
@@ -19,6 +19,6 @@ Lệnh tạo (thay `run2` bằng tên lượt mới nếu đã có):
 
 Nguyên nhân của lượt chạy trước khi audit và những sửa đổi cho bộ v2 nằm trong [`run1_analysis.md`](run1_analysis.md).
 
-Trường `model` trong báo cáo là model được **yêu cầu**; `model_attempts` đếm số case đi tới lệnh gọi API, còn `model_responses` đếm số case thực sự nhận được phản hồi thô. Model mặc định là `gemini-3.6-flash`. Lượt v2 `run1` hiện có 17/20 (85%) sau khi tính lại từ trace; 3 case HTTP 429 không có phản hồi model đều tính trượt. Xem [`run1_analysis.md`](run1_analysis.md) để hiểu giới hạn của tỷ lệ này.
+Trường `model` trong báo cáo là model được **yêu cầu**; `model_attempts` đếm số case đi tới lệnh gọi API, còn `model_responses` đếm số case thực sự nhận được phản hồi thô. Model mặc định cho lượt mới qua OpenRouter là `google/gemini-3.6-flash`. Lượt v2 `run1` dùng Gemini API trực tiếp và vẫn giữ kết quả lịch sử 17/20 (85%); 3 case HTTP 429 không có phản hồi model đều tính trượt. Không trộn kết quả của hai nhà cung cấp; xem [`run1_analysis.md`](run1_analysis.md) để hiểu giới hạn của tỷ lệ cũ.
 
 Nếu `model_attempts > 0` nhưng `model_responses = 0`, lệnh trả exit code 2. Bảng đạt/trượt vẫn được lưu để kiểm tra lỗi hạ tầng, nhưng chưa đo được chất lượng trả lời của AI.

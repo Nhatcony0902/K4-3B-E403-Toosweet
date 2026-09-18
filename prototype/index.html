@@ -320,7 +320,7 @@ async function askLive(question) {
     dismiss(pending, "Đã nhận phản hồi AI thật.");
     renderLiveResult(question, payload);
   } catch (error) {
-    dismiss(pending, "Không gọi được AI thật; hãy kiểm tra server và GEMINI_API_KEY.");
+    dismiss(pending, "Không gọi được AI thật; hãy kiểm tra server và OPENROUTER_API_KEY.");
     trace(`live-ai error: ${error.message}`);
   }
 }

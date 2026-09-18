@@ -2,19 +2,19 @@
 
 ## Chạy AI thật cục bộ
 
-1. Tạo biến môi trường `GEMINI_API_KEY` trong terminal (không ghi key vào file hoặc commit).
+1. Tạo biến môi trường `OPENROUTER_API_KEY` trong terminal (không ghi key vào file hoặc commit).
 2. Chạy server từ thư mục gốc repo:
 
 ```powershell
-$secret = Read-Host "Gemini API key" -AsSecureString
-$env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+$secret = Read-Host "OpenRouter API key" -AsSecureString
+$env:OPENROUTER_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
 Remove-Variable secret
 .\.venv\Scripts\python.exe codebase\server.py
 ```
 
-3. Mở <http://127.0.0.1:8000/?ai=1>. Khi gửi câu hỏi, trình duyệt gọi `/api/ask`; server truy xuất top-k, gọi Gemini thật và chạy validator trước khi render.
+3. Mở <http://127.0.0.1:8000/?ai=1>. Khi gửi câu hỏi, trình duyệt gọi `/api/ask`; server truy xuất top-k, gọi model qua OpenRouter và chạy validator trước khi render.
 
-Model mặc định là `gemini-3.6-flash`. Có thể chọn model khác bằng biến môi trường `GEMINI_MODEL` hoặc tham số `--model` khi chạy `ai_tutor.py`.
+Model mặc định là `google/gemini-3.6-flash`, cùng phiên bản Gemini đã dùng ở lượt đo trước. Có thể chọn model khác bằng biến môi trường `OPENROUTER_MODEL` hoặc tham số `--model` khi chạy `ai_tutor.py`. OpenRouter dùng [Chat Completions API](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request) và [model slug này](https://openrouter.ai/google/gemini-3.6-flash).
 
 Có thể kiểm tra lõi trực tiếp:
 

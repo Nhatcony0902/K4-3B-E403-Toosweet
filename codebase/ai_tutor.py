@@ -8,8 +8,8 @@ Usage:
     python codebase/ai_tutor.py --question "Embedding là gì?"
     python codebase/ai_tutor.py --question "Embedding là gì?" --json
 
-The Gemini call is real when GEMINI_API_KEY is present.  Set
-GEMINI_MODEL to override the model name.  The validator is always run after
+The OpenRouter call is real when OPENROUTER_API_KEY is present.  Set
+OPENROUTER_MODEL to override the model name.  The validator is always run after
 the model response, including when the response is malformed.
 """
 
@@ -30,7 +30,8 @@ from urllib.request import Request, urlopen
 
 
 STATUSES = {"GROUNDED", "CLARIFY", "NO_SOURCE"}
-DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
+DEFAULT_OPENROUTER_MODEL = "google/gemini-3.6-flash"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 REASONS = {
     "INSUFFICIENT_CONTENT", "SOURCE_CONFLICT", "SOURCE_UNCLEAR",
     "SOURCE_FLAGGED", "CLARIFY_LIMIT", "VALIDATION_FAILED",
@@ -141,31 +142,42 @@ def _extract_json(text: str) -> dict[str, Any]:
     return value
 
 
-def call_gemini(prompt: str, model: str | None = None, timeout: int = 45) -> tuple[str, str]:
-    api_key = os.getenv("GEMINI_API_KEY")
+def call_openrouter(prompt: str, model: str | None = None, timeout: int = 45) -> tuple[str, str]:
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY is not set")
-    model = model or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}}
-    req = Request(url, data=json.dumps(payload, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+        raise RuntimeError("OPENROUTER_API_KEY is not set")
+    model = model or os.getenv("OPENROUTER_MODEL") or DEFAULT_OPENROUTER_MODEL
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.1,
+        "response_format": {"type": "json_object"},
+    }
+    req = Request(
+        OPENROUTER_URL,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        method="POST",
+    )
     for attempt in range(3):
         try:
             with urlopen(req, timeout=timeout) as response:
                 body = json.loads(response.read().decode("utf-8"))
             break
         except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")[:500]
+            detail = exc.read().decode("utf-8", errors="replace").replace(api_key, "[REDACTED]")[:500]
             if exc.code == 503 and attempt < 2:
                 time.sleep(2 ** attempt)
                 continue
-            raise RuntimeError(f"Gemini request failed: HTTP {exc.code}: {detail}") from exc
+            raise RuntimeError(f"OpenRouter request failed: HTTP {exc.code}: {detail}") from exc
         except (URLError, TimeoutError) as exc:
-            raise RuntimeError(f"Gemini request failed: {exc}") from exc
+            raise RuntimeError(f"OpenRouter request failed: {exc}") from exc
     try:
-        raw = body["candidates"][0]["content"]["parts"][0]["text"]
+        raw = body["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError("Gemini response has no text candidate") from exc
+        raise RuntimeError("OpenRouter response has no message content") from exc
+    if not isinstance(raw, str) or not raw.strip():
+        raise RuntimeError("OpenRouter response has no text message content")
     return model, raw
 
 
@@ -283,11 +295,11 @@ def answer_question(question: str, *, task_id: str | None = None, clarify_count:
     sources = _source_payload(hits)
     prompt = build_prompt(question, sources, clarify_count)
     raw = None
-    used_model = model or os.getenv("GEMINI_MODEL") or DEFAULT_GEMINI_MODEL
+    used_model = model or os.getenv("OPENROUTER_MODEL") or DEFAULT_OPENROUTER_MODEL
     try:
         if not live:
             raise RuntimeError("live call disabled")
-        used_model, raw = call_gemini(prompt, model=used_model)
+        used_model, raw = call_openrouter(prompt, model=used_model)
     except Exception as exc:
         result = _backend_result("NO_SOURCE", "PROCESSING_ERROR", "Mình gặp lỗi khi xử lý yêu cầu; bạn thử lại hoặc gửi câu hỏi cho TA.")
         result["error_type"] = type(exc).__name__
@@ -301,7 +313,7 @@ def answer_question(question: str, *, task_id: str | None = None, clarify_count:
             result, errors = validate(candidate, hits, clarify_count)
             if errors:
                 result["model_status"] = candidate.get("status")
-    return _trace(task_id, question, route, sources, {"model": used_model, "prompt": prompt, "request_attempted": live, "raw_response": raw}, result, started)
+    return _trace(task_id, question, route, sources, {"provider": "openrouter", "model": used_model, "prompt": prompt, "request_attempted": live, "raw_response": raw}, result, started)
 
 
 def _trace(task_id: str, question: str, route: str, sources: list[dict[str, Any]], model_trace: dict[str, Any] | None, result: dict[str, Any], started: float) -> dict[str, Any]:
@@ -325,7 +337,7 @@ def main() -> int:
     parser.add_argument("--question", required=True)
     parser.add_argument("--clarify-count", type=int, default=0)
     parser.add_argument("--model")
-    parser.add_argument("--offline", action="store_true", help="skip Gemini; useful for routing/validator checks")
+    parser.add_argument("--offline", action="store_true", help="skip OpenRouter; useful for routing/validator checks")
     parser.add_argument("--json", action="store_true", help="print full trace JSON")
     args = parser.parse_args()
     trace = answer_question(args.question, clarify_count=args.clarify_count, model=args.model, live=not args.offline)

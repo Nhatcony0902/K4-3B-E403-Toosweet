@@ -59,7 +59,7 @@ Kiểm tra mã và trích đoạn là kiểm tra bằng code. Kiểm tra một �
 
 ### Mức prototype và automation
 
-**CP2 hiện tại:** [bản bấm thử](../prototype/index.html), 0 lời gọi AI, phù hợp mốc CP2 cho phép chưa cần AI theo guide §3.1. **CP3 đang triển khai:** [ ] Sketch [x] Mock [ ] Working — flow bấm được, dữ liệu có thể giả lập, lõi đã tích hợp đường gọi Gemini 3.6 Flash và trace/validator. Lượt chạy 18/9 đã nhận phản hồi thật từ model, nên điều kiện có AI ở lõi đã được chứng minh; chất lượng trả lời cần đo lại trên golden set đã kiểm tra nguồn gốc.
+**CP2 hiện tại:** [bản bấm thử](../prototype/index.html), 0 lời gọi AI, phù hợp mốc CP2 cho phép chưa cần AI theo guide §3.1. **CP3 đang triển khai:** [ ] Sketch [x] Mock [ ] Working — flow bấm được, dữ liệu có thể giả lập, lõi gọi Gemini 3.6 Flash qua OpenRouter và chạy trace/validator. Lượt chạy Gemini API trực tiếp ngày 18/9 đã chứng minh có AI thật ở lõi; lượt OpenRouter cần đo riêng trên golden set đã kiểm tra nguồn gốc.
 
 | Thành phần | CP2 hiện có | Thiết kế CP3 sau review |
 |---|---|---|
@@ -194,7 +194,7 @@ Phạm vi nguồn được giữ qua các lượt làm rõ/correction cho đến
 
 ### Trạng thái triển khai CP3 (18/9)
 
-- Lõi đã được triển khai tại [`codebase/ai_tutor.py`](ai_tutor.py): định tuyến hành chính/từ chối, truy xuất top-k, gọi Gemini REST thật qua `GEMINI_API_KEY`, parse JSON và validator trước khi trả kết quả.
+- Lõi đã được triển khai tại [`codebase/ai_tutor.py`](ai_tutor.py): định tuyến hành chính/từ chối, truy xuất top-k, gọi Chat Completions API qua `OPENROUTER_API_KEY` với model mặc định `google/gemini-3.6-flash`, parse JSON và validator trước khi trả kết quả.
 - Demo có thể chạy bằng [`codebase/server.py`](server.py) và mở `/?ai=1`; giao diện gọi `/api/ask` theo thời gian thực. CP2 vẫn mở được khi không có query `ai=1`.
 - Golden set phiên bản `cp3-v2-source-audited` tại [`eval/golden_set.json`](../eval/golden_set.json) có 20 case, 5 case mỗi lớp ①–④, 10 case `common`, 4 case `rare`, và 12 `source_turn_id` khác nhau đã đối chiếu ý hỏi trong chatlog K4 không preset. Câu hỏi đã rút gọn, không chứa raw chatlog hay dữ liệu khảo sát. Case chất lượng nguồn dùng fixture/cờ riêng, không truyền nhãn mong đợi vào tutor.
 - Bộ kiểm tra validator độc lập tại [`eval/validator_tests.py`](../eval/validator_tests.py) đạt 8/8, gồm mã nguồn giả, sai bài, citation trùng/thiếu, giới hạn hỏi lại và draft trong `NO_SOURCE`.

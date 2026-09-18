@@ -77,7 +77,7 @@ def _load_existing_traces(path, cases):
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--live", action="store_true", help="make a real Gemini call per academic case")
+    parser.add_argument("--live", action="store_true", help="make a real OpenRouter call per academic case")
     parser.add_argument("--rescore", action="store_true", help="recalculate from saved trace; make no API calls")
     parser.add_argument("--run-name", default="run1", help="file stem for this run, such as run2")
     parser.add_argument("--limit", type=int, default=20)
@@ -90,6 +90,7 @@ def main() -> int:
     cases = dataset["cases"][: args.limit]
     rows = []
     reported_model = None
+    reported_provider = None
     model_attempts = 0
     model_responses = 0
     trace_path = ROOT / "eval" / f"{args.run_name}_trace.jsonl"
@@ -115,14 +116,18 @@ def main() -> int:
         else:
             trace = existing_traces[case["id"]]
         reported_model = reported_model or trace.get("model", {}).get("model")
+        reported_provider = reported_provider or trace.get("model", {}).get("provider")
         model_attempts += bool(trace.get("model", {}).get("request_attempted"))
         model_responses += bool(trace.get("model", {}).get("raw_response"))
         rows.append(score_case(case, trace))
     passed = sum(1 for row in rows if row["passed"])
+    mode = "offline_routing_only"
+    if model_attempts:
+        mode = "live_openrouter" if args.live or reported_provider == "openrouter" else "live_gemini"
     report = {
         "run": args.run_name,
         "dataset_version": dataset["version"],
-        "mode": "live_gemini" if args.live or (args.rescore and model_attempts) else "offline_routing_only",
+        "mode": mode,
         "model": reported_model,
         "model_attempts": model_attempts,
         "model_responses": model_responses,
@@ -141,7 +146,7 @@ def main() -> int:
     summary_keys = ("mode", "model", "model_attempts", "model_responses", "ai_call_verified", "total", "passed", "failed", "infrastructure_errors", "pass_rate", "by_taxonomy", "failure_analysis")
     print(json.dumps({k: report[k] for k in summary_keys}, ensure_ascii=False, indent=2))
     if args.live and model_attempts and not model_responses:
-        print(f"Không nhận được phản hồi nào từ Gemini. Xem error_detail trong {trace_path.name} trước khi đánh giá chất lượng model.", file=sys.stderr)
+        print(f"Không nhận được phản hồi nào từ OpenRouter. Xem error_detail trong {trace_path.name} trước khi đánh giá chất lượng model.", file=sys.stderr)
         return 2
     return 0
 
