@@ -22,6 +22,7 @@ def main() -> int:
     cases = dataset["cases"][: args.limit]
     rows = []
     reported_model = None
+    model_attempts = 0
     model_responses = 0
     trace_path = ROOT / "eval" / "run1_trace.jsonl"
     trace_path.write_text("", encoding="utf-8")
@@ -35,6 +36,7 @@ def main() -> int:
             source_issue=case["expected_reason"] if case["expected_reason"] in {"SOURCE_CONFLICT", "SOURCE_UNCLEAR", "SOURCE_FLAGGED"} else None,
         )
         reported_model = reported_model or trace.get("model", {}).get("model")
+        model_attempts += bool(trace.get("model", {}).get("prompt"))
         model_responses += bool(trace.get("model", {}).get("raw_response"))
         result = trace["result"]
         status_match = result.get("status") == case["expected_status"]
@@ -65,7 +67,9 @@ def main() -> int:
         "run": "run1",
         "mode": "live_gemini" if args.live else "offline_routing_only",
         "model": reported_model,
+        "model_attempts": model_attempts,
         "model_responses": model_responses,
+        "ai_call_verified": model_responses > 0,
         "total": len(rows),
         "passed": passed,
         "failed": len(rows) - passed,
@@ -76,7 +80,11 @@ def main() -> int:
         "failure_analysis": _failure_analysis(rows),
     }
     (ROOT / "eval" / "run1_results.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({k: report[k] for k in ("mode", "total", "passed", "failed", "pass_rate", "by_taxonomy", "failure_analysis")}, ensure_ascii=False, indent=2))
+    summary_keys = ("mode", "model", "model_attempts", "model_responses", "ai_call_verified", "total", "passed", "failed", "pass_rate", "by_taxonomy", "failure_analysis")
+    print(json.dumps({k: report[k] for k in summary_keys}, ensure_ascii=False, indent=2))
+    if args.live and model_attempts and not model_responses:
+        print("Không nhận được phản hồi nào từ Gemini. Xem error_detail trong run1_trace.jsonl trước khi đánh giá chất lượng model.", file=sys.stderr)
+        return 2
     return 0
 
 

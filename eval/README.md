@@ -18,3 +18,5 @@ Lệnh tạo:
 `--limit N` dùng để chạy thử một phần bộ. Không commit API key, `.env`, raw data hoặc file Excel.
 
 Trường `model` trong báo cáo là model được **yêu cầu**; `model_responses` đếm số case thực sự nhận được phản hồi thô. Model mặc định từ phiên bản này là `gemini-3.6-flash`. Kết quả `run1` đã ghi trước khi đổi model là dữ liệu lịch sử và chỉ thay đổi khi chạy lại lệnh trên.
+
+Nếu `model_attempts > 0` nhưng `model_responses = 0`, lệnh trả exit code 2. Bảng đạt/trượt vẫn được lưu để kiểm tra lỗi hạ tầng, nhưng chưa đo được chất lượng trả lời của AI.
