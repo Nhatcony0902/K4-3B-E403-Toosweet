@@ -334,7 +334,7 @@ Ba vế phải đạt đồng thời. Định nghĩa kiểm chứng được c�
 
 **Willing users (người ngoài nhóm đã đồng ý thử):**
 
-> **Phạm Hương Giang** · **Lưu Quang Khải** — hai học viên ngoài nhóm đã đồng ý thử sản phẩm. Tên chỉ được ghi sau khi xác nhận trực tiếp; không đưa tên người chưa đồng ý vào repo công khai.
+> **Phạm Hương Giang** · **Lưu Quang Khải** — hai học viên ngoài nhóm đã đồng ý thử sản phẩm.
 
 **Kế hoạch vòng validation:** mỗi người thử 5–7 câu hỏi tự nghĩ trên bài đang học, quan sát trực tiếp và không nhắc. Đo ba thứ: (1) họ có bấm vào nút nguồn không, (2) khi hệ thống báo `NO_SOURCE` thì họ làm gì tiếp, (3) họ có phát hiện được một câu trả lời cố tình gài sai không. Ghi nguyên văn chỗ họ khựng lại; case mới phát hiện được thêm vào golden set với `frequency_class` phù hợp.
 
